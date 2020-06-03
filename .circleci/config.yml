@@ -16,6 +16,7 @@ jobs:
         environment:
           POSTGRES_USER: alice
           POSTGRES_PASSWORD: foo
+          POSTGRES_DB: config-test
 
     working_directory: ~/datahike
 
