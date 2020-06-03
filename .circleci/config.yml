@@ -44,3 +44,5 @@ jobs:
 
       # run tests!
       - run: lein do test, uberjar
+
+      - run: lein kaocha integration
