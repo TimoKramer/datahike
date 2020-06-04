@@ -25,16 +25,6 @@
 
 (use-fixtures :once config-record-test-fixture)
 
-(deftest return-map-test
-  ;; search the data
-  (is (= [{:entity 3 :name "Alice" :age 20}] [{:entity 4 :name "Bob" :age 30}] [{:entity 5 :name "Charlie" :age 40}]
-         (d/q '[:find ?e ?n ?a
-                :keys entity name age
-                :where
-                [?e :name ?n]
-                [?e :age ?a]]
-              @conn))))
-
 (deftest test-config-record-test
   ;; search the data
   (is (= #{[3 "Alice" 20] [4 "Bob" 30] [5 "Charlie" 40]}
