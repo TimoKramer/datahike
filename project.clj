@@ -96,4 +96,13 @@
 
   :clean-targets ^{:protect false} ["target"
                                     "release-js/datahike.bare.js"
-                                    "release-js/datahike.js"])
+                                    "release-js/datahike.js"]
+
+  :release-tasks [["vcs" "assert-committed"]
+                  ["change" "version" "leiningen.release/bump-version" "release"]
+                  ["vcs" "commit"]
+                  ["vcs" "tag" "--no-sign"]
+                  ["deploy"]
+                  ["change" "version" "leiningen.release/bump-version"]
+                  ["vcs" "commit"]
+                  ["vcs" "push"]])
