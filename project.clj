@@ -1,4 +1,4 @@
-(defproject timokramer/datahike "0.2.9"
+(defproject timokramer/datahike "0.2.10-SNAPSHOT"
 
 
   :description "A durable datalog implementation adaptable for distribution."
@@ -98,4 +98,5 @@
 
   :clean-targets ^{:protect false} ["target"
                                     "release-js/datahike.bare.js"
-                                    "release-js/datahike.js"])
+                                    "release-js/datahike.js"]
+  :release-tasks [["deploy"]])
