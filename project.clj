@@ -1,4 +1,4 @@
-(defproject timokramer/datahike "0.2.10-SNAPSHOT"
+(defproject timokramer/datahike "0.2.10"
 
 
   :description "A durable datalog implementation adaptable for distribution."
@@ -99,4 +99,10 @@
   :clean-targets ^{:protect false} ["target"
                                     "release-js/datahike.bare.js"
                                     "release-js/datahike.js"]
-  :release-tasks [["deploy"]])
+
+  :release-tasks [["deploy"]]
+
+  :deploy-repositories [["clojars" {:url "https://clojars.org/repo"
+                                    :username :env
+                                    :password :env
+                                    :sign-releases false}]])
