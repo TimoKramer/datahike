@@ -110,6 +110,7 @@ be ported to core.async to coordinate IO in a platform-neutral manner.
 Refer to the docs for more information:
 
 - [configuration](./doc/config.md)
+- [logging and errors](./doc/logging_and_error_handling.md)
 - [schema flexibility](./doc/schema.md)
 - [time variance](./doc/time_variance.md)
 - [differences from Datomic](./doc/datomic_differences.md)
