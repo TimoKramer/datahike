@@ -1,4 +1,4 @@
-(defproject timokramer/datahike "0.2.4"
+(defproject timokramer/datahike "0.2.4-SNAPSHOT"
   :description "A durable datalog implementation adaptable for distribution."
   :license {:name "Eclipse"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -96,13 +96,4 @@
 
   :clean-targets ^{:protect false} ["target"
                                     "release-js/datahike.bare.js"
-                                    "release-js/datahike.js"]
-
-  :release-tasks [["vcs" "assert-committed"]
-                  ["change" "version" "leiningen.release/bump-version" "release"]
-                  ["vcs" "commit"]
-                  ["vcs" "tag" "--no-sign"]
-                  ["deploy"]
-                  ["change" "version" "leiningen.release/bump-version"]
-                  ["vcs" "commit"]
-                  ["vcs" "push"]])
+                                    "release-js/datahike.js"])
