@@ -35,3 +35,27 @@ jobs:
       - run: ./bin/run-unit-tests
       - run: lein uberjar
       - run: ./bin/run-integration-tests
+
+  release:
+    working_directory: ~/datahike
+
+    filters:
+      tags:
+        only: /.*-SNAPSHOT
+
+    docker:
+      - image: cimg/clojure:1.10.1
+
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - datahike-{{ checksum "project.clj" }}
+      - run: lein deps
+      - save_cache:
+          paths:
+            - ~/.m2
+            - ~/.lein
+          key: datahike-{{ checksum "project.clj" }}
+      - run: ./bin/run-unit-tests
+      - run: lein uberjar
