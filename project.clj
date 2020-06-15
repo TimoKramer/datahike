@@ -1,4 +1,4 @@
-(defproject timokramer/datahike "0.2.8-SNAPSHOT"
+(defproject timokramer/datahike "0.2.9"
 
 
   :description "A durable datalog implementation adaptable for distribution."

@@ -1,4 +1,4 @@
-version: 2.0
+version: 2.1
 jobs:
   build:
     working_directory: ~/datahike
@@ -41,7 +41,7 @@ jobs:
 
     filters:
       tags:
-        only: /.*-SNAPSHOT
+        only: /.*-SNAPSHOT/
 
     docker:
       - image: cimg/clojure:1.10.1
