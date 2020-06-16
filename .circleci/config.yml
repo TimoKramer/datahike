@@ -98,6 +98,9 @@ workflows:
           requires:
             - setup
       - deploy:
+          filters:
+            branches:
+              only: master
           requires:
             - setup
             - unittest
