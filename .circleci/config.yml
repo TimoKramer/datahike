@@ -33,11 +33,17 @@ jobs:
           paths:
             - /home/circleci/.m2
             - /home/circleci/.lein
+      - run:
+          name: Install Babashka
+          command: |
+            mkdir -p /home/circleci/bin
+            bash <(curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install) /home/circleci/bin
       - persist_to_workspace:
           root: /home/circleci/
           paths:
             - .m2
             - datahike
+            - bin
 
   unittest:
     executor: leiningen
@@ -75,14 +81,34 @@ jobs:
           command: lein uberjar
           no_output_timeout: 5m
 
-  deploy:
+  deploy-snapshot:
     executor: leiningen
     steps:
       - attach_workspace:
           at: /home/circleci
       - run:
-          name: Deploy to Clojars
-          command: lein deploy clojars
+          command: |
+            VERSION=$(bb '(-> "project.clj" slurp read-string (nth 2))' | tr -d \")
+            if [[ ${VERSION} =~ .*-SNAPSHOT ]]; then
+                lein deploy clojars
+            else
+                exit 0
+            fi
+
+  deploy-release:
+    executor: leiningen
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - run:
+          name: Deploy Release to Clojars
+          command: |
+            VERSION=$(bb '(-> "project.clj" slurp read-string (nth 2))' | tr -d \")
+            if [[ ${VERSION} =~ .*-SNAPSHOT ]]; then
+                exit 0
+            else
+                lein deploy clojars
+            fi
 
 workflows:
   build_and_test:
@@ -97,7 +123,16 @@ workflows:
       - build:
           requires:
             - setup
-      - deploy:
+      - deploy-snapshot:
+          filters:
+            branches:
+              only: development
+          requires:
+            - setup
+            - unittest
+            - integrationtest
+            - build
+      - deploy-release:
           filters:
             branches:
               only: master
