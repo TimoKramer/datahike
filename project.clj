@@ -1,4 +1,4 @@
-(defproject timokramer/datahike "0.3.7"
+(defproject timokramer/datahike "0.3.6"
 
   :description "A durable datalog implementation adaptable for distribution."
   :license {:name "Eclipse"
