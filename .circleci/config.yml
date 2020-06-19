@@ -58,6 +58,7 @@ jobs:
   integrationtest:
     executor: leiningen
     docker:
+      - image: mopedtobias/cimg:1.10
       - image: circleci/postgres:11-alpine
         environment:
           POSTGRES_USER: alice
@@ -109,7 +110,7 @@ jobs:
                 lein deploy clojars
             fi
 workflows:
-  build_and_test:
+  build_test_and_deploy:
     jobs:
       - setup
       - unittest:
