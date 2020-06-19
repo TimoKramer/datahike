@@ -1,4 +1,4 @@
-(defproject io.replikativ/datahike "0.3.1-SNAPSHOT"
+(defproject timokramer/datahike "0.3.4-SNAPSHOT"
   :description "A durable datalog implementation adaptable for distribution."
   :license {:name "Eclipse"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
@@ -8,14 +8,14 @@
                  [org.clojure/clojurescript "1.10.597" :scope "provided"]
                  [persistent-sorted-set     "0.1.2"]
                  [org.clojure/tools.reader "1.3.2"]
-                 [environ "1.1.0"]
+                 [environ "1.2.0"]
                  [io.replikativ/hitchhiker-tree "0.1.7"]
                  [io.replikativ/superv.async "0.2.9"]
-                 [io.lambdaforge/datalog-parser "0.1.5"]
+                 [io.lambdaforge/datalog-parser "0.1.7"]
                  [io.replikativ/zufall "0.1.0"]
                  [junit/junit "4.12"]]
 
-  :plugins [[lein-cljsbuild "1.1.7"]]
+  :plugins [[lein-cljsbuild "1.1.8"]]
 
   :global-vars {*warn-on-reflection*   true
                 *print-namespace-maps* false}
@@ -98,4 +98,9 @@
 
   :clean-targets ^{:protect false} ["target"
                                     "release-js/datahike.bare.js"
-                                    "release-js/datahike.js"])
+                                    "release-js/datahike.js"]
+
+  :deploy-repositories [["clojars" {:url "https://clojars.org/repo"
+                                    :username :env
+                                    :password :env
+                                    :sign-releases false}]])
