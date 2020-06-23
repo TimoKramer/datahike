@@ -3,7 +3,7 @@ version: 2.1
 executors:
   leiningen:
     docker:
-      - image: circleci/openjdk-8-lein
+      - image: circleci/clojure:openjdk-8-lein
     environment:
       LEIN_ROOT: nbd
       JVM_OPTS: -Xmx3200m
