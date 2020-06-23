@@ -1,4 +1,4 @@
-(defproject timokramer/datahike "0.5.0-SNAPSHOT"
+(defproject timokramer/datahike "0.5.0"
   :description "A durable datalog implementation adaptable for distribution."
   :license {:name "Eclipse"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
