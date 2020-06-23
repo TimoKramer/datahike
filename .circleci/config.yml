@@ -3,7 +3,7 @@ version: 2.1
 executors:
   leiningen:
     docker:
-      - image: mopedtobias/cimg:1.10
+      - image: circleci/clojure:openjdk-8-lein
     environment:
       LEIN_ROOT: nbd
       JVM_OPTS: -Xmx3200m
@@ -33,11 +33,6 @@ jobs:
           paths:
             - /home/circleci/.m2
             - /home/circleci/.lein
-      - run:
-          name: Install Babashka
-          command: |
-            mkdir -p /home/circleci/bin
-            bash <(curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install) /home/circleci/bin
       - persist_to_workspace:
           root: /home/circleci/
           paths:
@@ -89,7 +84,7 @@ jobs:
           at: /home/circleci
       - run:
           command: |
-            VERSION=$(bb '(-> "project.clj" slurp read-string (nth 2))' | tr -d \")
+            VERSION=$(head -n 1 project.clj | awk '{print $3}' | tr -d \")
             if [[ ${VERSION} =~ .*-SNAPSHOT ]]; then
                 lein deploy clojars
             else
@@ -103,7 +98,7 @@ jobs:
       - run:
           name: Deploy Release to Clojars
           command: |
-            VERSION=$(bb '(-> "project.clj" slurp read-string (nth 2))' | tr -d \")
+            VERSION=$(head -n 1 project.clj | awk '{print $3}' | tr -d \")
             if [[ ${VERSION} =~ .*-SNAPSHOT ]]; then
                 exit 0
             else
