@@ -1,5 +1,6 @@
 (ns datahike.tools
   (:require
+   [clojure.spec.alpha :as s]
    [taoensso.timbre :as log]))
 
 (defn combine-hashes [x y]
@@ -23,6 +24,19 @@
 (defn get-time []
   #?(:clj (java.util.Date.)
      :cljs (js/Date.)))
+
+(s/def ::message-structure (s/+ (s/or :string string?
+                                      :variable symbol? ; db.cljc has lots of vars in messages
+                                      :function-call list? ; db.cljc line 1010
+                                      :vector vector?))) ; db.cljc line 1154
+(s/def ::data-structure (s/or :map map?
+                              :function-call list? ; db.cljc line 717
+                              :variable symbol?)) ; query_v3.cljc line 560
+(s/def ::fragments (s/cat :messages ::message-structure
+                          :data ::data-structure))
+(s/fdef raise
+        :args ::fragments
+        :ret any?)
 
 (defmacro raise [& fragments]
   (let [msgs (butlast fragments)
