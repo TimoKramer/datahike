@@ -38,7 +38,12 @@
         :args ::fragments
         :ret any?)
 
-(defmacro raise [& fragments]
+(defmacro raise
+  "Logging an error and throwing an exception with message and structured data.
+   Arguments:
+   - Any number of strings that describe the error
+   - Last argument is a map of data that helps understanding the source of the error"
+  [& fragments]
   (let [msgs (butlast fragments)
         data (last fragments)]
     (list `(log/log! :error :p ~fragments ~{:?line (:line (meta &form))})

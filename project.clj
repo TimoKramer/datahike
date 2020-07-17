@@ -87,6 +87,7 @@
              :dev {:source-paths ["bench/src" "test" "dev"]
                    :dependencies [[org.clojure/tools.nrepl     "0.2.13"]
                                   [org.clojure/tools.namespace "1.0.0"]
+                                  [org.clojure/test.check      "1.1.0"]
                                   [lambdaisland/kaocha         "1.0.632"]
                                   [lambdaisland/kaocha-cljs    "0.0-71"]
                                   [io.replikativ/datahike-leveldb "0.1.0"]
