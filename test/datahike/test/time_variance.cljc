@@ -1,8 +1,8 @@
 (ns datahike.test.time-variance
   (:require
-    #?(:cljs [cljs.test :as t :refer-macros [is are deftest testing]]
-       :clj  [clojure.test :as t :refer [is are deftest testing use-fixtures]])
-    [datahike.api :as d])
+   #?(:cljs [cljs.test :as t :refer-macros [is are deftest testing]]
+      :clj  [clojure.test :as t :refer [is are deftest testing use-fixtures]])
+   [datahike.api :as d])
   (:import [java.util Date]))
 
 (def schema-tx [{:db/ident       :name
@@ -37,7 +37,7 @@
     (testing "historical values"
       (d/transact conn [{:db/id [:name "Alice"] :age 30}])
       (are [x y]
-          (= x y)
+           (= x y)
         #{[30]}
         (d/q '[:find ?a :in $ ?e :where [?e :age ?a]] @conn [:name "Alice"])
         #{[30] [25]}
@@ -45,7 +45,7 @@
     (testing "historical values after with retraction"
       (d/transact conn [[:db/retractEntity [:name "Alice"]]])
       (are [x y]
-          (= x y)
+           (= x y)
         #{}
         (d/q '[:find ?a :in $ ?e :where [?e :age ?a]] @conn [:name "Alice"])
         #{[30] [25]}
@@ -106,11 +106,11 @@
         query '[:find ?a :in $ ?e :where [?e :age ?a ?tx]]]
     (testing "get values at specific time"
       (is (= #{[25]}
-               (d/q query (d/as-of @conn first-date) [:name "Alice"]))))
+             (d/q query (d/as-of @conn first-date) [:name "Alice"]))))
     (testing "use transaction ID"
       (let [tx-id 536870914]
         (is (= #{[25]}
-                 (d/q query (d/as-of @conn tx-id) [:name "Alice"])))))))
+               (d/q query (d/as-of @conn tx-id) [:name "Alice"])))))))
 
 (deftest test-since-db
   (let [uri "datahike:mem://test-historical-queries"
@@ -121,7 +121,7 @@
         query '[:find ?a :where [?e :age ?a]]]
     (testing "empty after first insertion"
       (is (= #{}
-            (d/q query (d/since @conn first-date)))))
+             (d/q query (d/since @conn first-date)))))
     (testing "added new value"
       (let [new-age 30
             _ (d/transact conn [{:db/id [:name "Alice"] :age new-age}])]
@@ -134,8 +134,7 @@
         _ (d/create-database uri :initial-tx [{:db/ident :name
                                                :db/cardinality :db.cardinality/one
                                                :db/valueType :db.type/string
-                                               :db/unique :db.unique/identity
-                                               }
+                                               :db/unique :db.unique/identity}
                                               {:db/ident :age
                                                :db/cardinality :db.cardinality/one
                                                :db/valueType :db.type/long
