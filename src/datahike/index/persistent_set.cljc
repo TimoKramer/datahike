@@ -35,12 +35,14 @@
 
 (defn init-set [datoms indexed index-type]
   (let [arr (if (= index-type :avet)
-              (let [avet-datoms (filter (fn [^Datom d] (contains? indexed (.-a d))) datoms)]
+              (let [avet-datoms (filter (fn [^Datom d]
+                                          (contains? indexed (.-a d)))
+                                        datoms)]
                 (to-array avet-datoms))
               (cond-> datoms
                 (not (arrays/array? datoms))
                 (arrays/into-array)))
-        _ (arrays/asort arr (index-type->cmp-quick index-type))]
+        _   (arrays/asort arr (index-type->cmp-quick index-type))]
     (set/from-sorted-array (index-type->cmp index-type) arr)))
 
 (defn -insert [set datom index-type]

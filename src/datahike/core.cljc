@@ -7,11 +7,10 @@
     [datahike.query :as dq]
     [datahike.constants :as dc]
     [datahike.impl.entity :as de])
-  #?(:clj
-     (:import
-       [datahike.db FilteredDB]
-       [datahike.impl.entity Entity]
-       [java.util UUID])))
+  #?(:clj (:import
+            [datahike.db FilteredDB]
+            [datahike.impl.entity Entity]
+            [java.util UUID])))
 
 
 (def ^:const ^:no-doc tx0 dc/tx0)
@@ -19,9 +18,10 @@
 
 ; Entities
 
-(def ^{:arglists '([db eid])
-
-       :doc      "Retrieves an entity by its id from database. Entities are lazy map-like structures to navigate DataScript database content.
+(def
+  ^{:arglists '([db eid])
+    :doc
+    "Retrieves an entity by its id from database. Entities are lazy map-like structures to navigate DataScript database content.
 
              For `eid` pass entity id or lookup attr:
              
@@ -69,16 +69,20 @@
              - Comparing entities just compares their ids. Be careful when comparing entities taken from differenct dbs or from different versions of the same db.
              - Accessed entity attributes are cached on entity itself (except backward references).
              - When printing, only cached attributes (the ones you have accessed before) are printed. See [[touch]]."}
-  entity de/entity)
+  entity
+  de/entity)
 
 
-(def ^{:arglists '([db eid])
-       :doc      "Given lookup ref `[unique-attr value]`, returns numberic entity id.
+(def
+  ^{:arglists '([db eid])
+    :doc
+    "Given lookup ref `[unique-attr value]`, returns numberic entity id.
 
              If entity does not exist, returns `nil`.
 
              For numeric `eid` returns `eid` itself (does not check for entity existence in that case)."}
-  entid db/entid)
+  entid
+  db/entid)
 
 
 (defn entity-db
@@ -88,8 +92,10 @@
   (.-db entity))
 
 
-(def ^{:arglists '([e])
-       :doc      "Forces all entity attributes to be eagerly fetched and cached. Only usable for debug output.
+(def
+  ^{:arglists '([e])
+    :doc
+    "Forces all entity attributes to be eagerly fetched and cached. Only usable for debug output.
 
              Usage:
 
@@ -97,13 +103,16 @@
              (entity db 1) ; => {:db/id 1}
              (touch (entity db 1)) ; => {:db/id 1, :dislikes [:pie], :likes [:pizza]}
              ```"}
-  touch de/touch)
+  touch
+  de/touch)
 
 
 ; Pull
 
-(def ^{:arglists '([db selector eid])
-       :doc      "Fetches data from database using recursive declarative description. See [docs.datomic.com/on-prem/pull.html](https://docs.datomic.com/on-prem/pull.html).
+(def
+  ^{:arglists '([db selector eid])
+    :doc
+    "Fetches data from database using recursive declarative description. See [docs.datomic.com/on-prem/pull.html](https://docs.datomic.com/on-prem/pull.html).
 
              Unlike [[entity]], returns plain Clojure map (not lazy).
 
@@ -114,11 +123,14 @@
                  ;     :name    \"Ivan\"
                  ;     :likes   [:pizza]
                  ;     :friends [{:db/id 2, :name \"Oleg\"}]}"}
-  pull dp/pull)
+  pull
+  dp/pull)
 
 
-(def ^{:arglists '([db selector eids])
-       :doc      "Same as [[pull]], but accepts sequence of ids and returns sequence of maps.
+(def
+  ^{:arglists '([db selector eids])
+    :doc
+    "Same as [[pull]], but accepts sequence of ids and returns sequence of maps.
 
              Usage:
 
@@ -127,14 +139,16 @@
              ; => [{:db/id 1, :name \"Ivan\"}
              ;     {:db/id 2, :name \"Oleg\"}]
              ```"}
-  pull-many dp/pull-many)
+  pull-many
+  dp/pull-many)
 
 
 ; Query
 
 (def
   ^{:arglists '([query & inputs])
-    :doc      "Executes a datalog query. See [docs.datomic.com/on-prem/query.html](https://docs.datomic.com/on-prem/query.html).
+    :doc
+    "Executes a datalog query. See [docs.datomic.com/on-prem/query.html](https://docs.datomic.com/on-prem/query.html).
 
           Usage:
           
@@ -144,13 +158,16 @@
              db)
           ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
           ```"}
-  q dq/q)
+  q
+  dq/q)
 
 
 ; Creating DB
 
-(def ^{:arglists '([] [schema] [schema config])
-       :doc      "Creates an empty database with an optional schema and configuration.
+(def
+  ^{:arglists '([] [schema] [schema config])
+    :doc
+    "Creates an empty database with an optional schema and configuration.
 
              Usage:
              ```
@@ -162,35 +179,44 @@
 
              (empty-db {} {:keep-history? false :index datahike.index.hitchhiker-tree :schema-flexibility :write})
              ```"}
-  empty-db db/empty-db)
+  empty-db
+  db/empty-db)
 
 
 (def ^{:arglists '([x])
        :doc      "Returns `true` if the given value is an immutable database, `false` otherwise."}
-  db? db/db?)
+     db?
+  db/db?)
 
 
-(def ^{:arglists '([e a v] [e a v tx] [e a v tx added])
-       :doc      "Low-level fn to create raw datoms.
+(def
+  ^{:arglists '([e a v] [e a v tx] [e a v tx added])
+    :doc
+    "Low-level fn to create raw datoms.
 
              Optionally with transaction id (number) and `added` flag (`true` for addition, `false` for retraction).
 
              See also [[init-db]]."}
-  datom dd/datom)
+  datom
+  dd/datom)
 
 
 (def ^{:arglists '([x])
        :doc      "Returns `true` if the given value is a datom, `false` otherwise."}
-  datom? dd/datom?)
+     datom?
+  dd/datom?)
 
 
-(def ^{:arglists '([datoms] [datoms schema] [datoms schema config])
-       :doc      "Low-level fn for creating database quickly from a trusted sequence of datoms.
+(def
+  ^{:arglists '([datoms] [datoms schema] [datoms schema config])
+    :doc
+    "Low-level fn for creating database quickly from a trusted sequence of datoms.
 
              Does no validation on inputs, so `datoms` must be well-formed and match schema.
 
              Used internally in db (de)serialization. See also [[datom]]."}
-  init-db db/init-db)
+  init-db
+  db/init-db)
 
 
 ; Filtered db
@@ -215,8 +241,8 @@
   {:pre [(db/db? db)]}
   (if (is-filtered db)
     (let [^FilteredDB fdb db
-          orig-pred (.-pred fdb)
-          orig-db (.-unfiltered-db fdb)]
+          orig-pred       (.-pred fdb)
+          orig-db         (.-unfiltered-db fdb)]
       (FilteredDB. orig-db #(and (orig-pred %) (pred orig-db %))))
     (FilteredDB. db #(pred db %))))
 
@@ -235,7 +261,8 @@
                              :db-after  db
                              :tx-data   []
                              :tempids   {}
-                             :tx-meta   tx-meta}) tx-data))))
+                             :tx-meta   tx-meta})
+                          tx-data))))
 
 (defn load-entities-with [db entities]
   (db/transact-entities-directly
@@ -243,7 +270,7 @@
                        :db-after  db
                        :tx-data   []
                        :tempids   {}
-                       :tx-meta []})
+                       :tx-meta   []})
     entities))
 
 (defn db-with
@@ -414,7 +441,7 @@
 (defn conn?
   "Returns `true` if this is a connection to a DataScript db, `false` otherwise."
   [conn]
-  (and #?(:clj  (instance? clojure.lang.IDeref conn)
+  (and #?(:clj (instance? clojure.lang.IDeref conn)
           :cljs (satisfies? cljs.core/IDeref conn))
        (db/db? @conn)))
 
@@ -543,7 +570,8 @@
   ([conn tx-data tx-meta]
    {:pre [(conn? conn)]}
    (let [report (-transact! conn tx-data tx-meta)]
-     (doseq [[_ callback] (some-> (:listeners (meta conn)) (deref))]
+     (doseq [[_ callback] (some-> (:listeners (meta conn))
+                                  (deref))]
        (callback report))
      report)))
 
@@ -560,14 +588,16 @@
                                 (datoms db :eavt))
                    :tx-meta   tx-meta})]
      (reset! conn db)
-     (doseq [[_ callback] (some-> (:listeners (meta conn)) (deref))]
+     (doseq [[_ callback] (some-> (:listeners (meta conn))
+                                  (deref))]
        (callback report))
      db)))
 
 
-(defn- atom? [a]
+(defn- atom?
+  [a]
   #?(:cljs (instance? Atom a)
-     :clj  (instance? clojure.lang.IAtom a)))
+     :clj (instance? clojure.lang.IAtom a)))
 
 
 (defn listen!
@@ -612,17 +642,19 @@
 
 ;; Data Readers
 
-(def ^{:doc "Data readers for EDN readers. In CLJS they’re registered automatically. In CLJ, if `data_readers.clj` do not work, you can always do
+(def
+  ^{:doc
+    "Data readers for EDN readers. In CLJS they’re registered automatically. In CLJ, if `data_readers.clj` do not work, you can always do
 
              ```
              (clojure.edn/read-string {:readers data-readers} \"...\")
              ```"}
-  data-readers {'datahike/Datom dd/datom-from-reader
-                'db/id          tempid
-                'datahike/DB    db/db-from-reader})
+  data-readers
+  {'datahike/Datom dd/datom-from-reader
+   'db/id          tempid
+   'datahike/DB    db/db-from-reader})
 
-#?(:cljs
-   (doseq [[tag cb] data-readers] (cljs.reader/register-tag-parser! tag cb)))
+#?(:cljs (doseq [[tag cb] data-readers] (cljs.reader/register-tag-parser! tag cb)))
 
 
 (defn resolve-tempid
@@ -650,47 +682,51 @@
   ([conn tx-data tx-meta]
    {:pre [(conn? conn)]}
    (let [res (transact! conn tx-data tx-meta)]
-     #?(:cljs
-        (reify
-          IDeref
-          (-deref [_] res)
-          IDerefWithTimeout
-          (-deref-with-timeout [_ _ _] res)
-          IPending
-          (-realized? [_] true))
-        :clj
-        (reify
-          clojure.lang.IDeref
-          (deref [_] res)
-          clojure.lang.IBlockingDeref
-          (deref [_ _ _] res)
-          clojure.lang.IPending
-          (isRealized [_] true))))))
+     #?(:cljs (reify
+                IDeref
+                  (-deref [_] res)
+                IDerefWithTimeout
+                  (-deref-with-timeout [_ _ _] res)
+                IPending
+                  (-realized? [_] true))
+        :clj (reify
+               clojure.lang.IDeref
+                 (deref [_] res)
+               clojure.lang.IBlockingDeref
+                 (deref [_ _ _] res)
+               clojure.lang.IPending
+                 (isRealized [_] true))))))
 
 (defn load-entities [conn entities]
   {:pre [(conn? conn)]}
   (let [res (-load-entities! conn entities)]
     (reify
       clojure.lang.IDeref
-      (deref [_] res)
+        (deref [_] res)
       clojure.lang.IBlockingDeref
-      (deref [_ _ _] res)
+        (deref [_ _ _] res)
       clojure.lang.IPending
-      (isRealized [_] true))))
+        (isRealized [_] true))))
 
 ;; ersatz future without proper blocking
-#?(:cljs
-   (defn- future-call [f]
-     (let [res (atom nil)
-           realized (atom false)]
-       (js/setTimeout #(do (reset! res (f)) (reset! realized true)) 0)
-       (reify
-         IDeref
-         (-deref [_] @res)
-         IDerefWithTimeout
-         (-deref-with-timeout [_ _ timeout-val] (if @realized @res timeout-val))
-         IPending
-         (-realized? [_] @realized)))))
+#?(:cljs (defn- future-call
+           [f]
+           (let [res      (atom nil)
+                 realized (atom false)]
+             (js/setTimeout #(do
+                               (reset! res (f))
+                               (reset! realized true))
+                            0)
+             (reify
+               IDeref
+                 (-deref [_] @res)
+               IDerefWithTimeout
+                 (-deref-with-timeout [_ _ timeout-val]
+                   (if @realized
+                     @res
+                     timeout-val))
+               IPending
+                 (-realized? [_] @realized)))))
 
 
 (defn transact-async
@@ -703,18 +739,19 @@
    (future-call #(transact! conn tx-data tx-meta))))
 
 
-(defn- rand-bits [pow]
+(defn- rand-bits
+  [pow]
   (rand-int (bit-shift-left 1 pow)))
 
 
-#?(:cljs
-   (defn- to-hex-string [n l]
-     (let [s (.toString n 16)
-           c (count s)]
-       (cond
-         (> c l) (subs s 0 l)
-         (< c l) (str (apply str (repeat (- l c) "0")) s)
-         :else s))))
+#?(:cljs (defn- to-hex-string
+           [n l]
+           (let [s (.toString n 16)
+                 c (count s)]
+             (cond
+               (> c l) (subs s 0 l)
+               (< c l) (str (apply str (repeat (- l c) "0")) s)
+               :else   s))))
 
 
 (defn squuid
@@ -722,35 +759,47 @@
   
    Consist of 64 bits of current UNIX timestamp (in seconds) and 64 random bits (2^64 different unique values per second)."
   ([]
-   (squuid #?(:clj  (System/currentTimeMillis)
+   (squuid #?(:clj (System/currentTimeMillis)
               :cljs (.getTime (js/Date.)))))
   ([msec]
-   #?(:clj
-      (let [uuid (UUID/randomUUID)
-            time (int (/ msec 1000))
-            high (.getMostSignificantBits uuid)
-            low (.getLeastSignificantBits uuid)
-            new-high (bit-or (bit-and high 0x00000000FFFFFFFF)
-                             (bit-shift-left time 32))]
-        (UUID. new-high low))
-      :cljs
-      (uuid
-        (str
-          (-> (int (/ msec 1000))
-              (to-hex-string 8))
-          "-" (-> (rand-bits 16) (to-hex-string 4))
-          "-" (-> (rand-bits 16) (bit-and 0x0FFF) (bit-or 0x4000) (to-hex-string 4))
-          "-" (-> (rand-bits 16) (bit-and 0x3FFF) (bit-or 0x8000) (to-hex-string 4))
-          "-" (-> (rand-bits 16) (to-hex-string 4))
-          (-> (rand-bits 16) (to-hex-string 4))
-          (-> (rand-bits 16) (to-hex-string 4)))))))
+   #?(:clj (let [uuid     (UUID/randomUUID)
+                 time     (int (/ msec 1000))
+                 high     (.getMostSignificantBits uuid)
+                 low      (.getLeastSignificantBits uuid)
+                 new-high (bit-or (bit-and high 0x00000000FFFFFFFF)
+                                  (bit-shift-left time 32))]
+             (UUID. new-high low))
+      :cljs (uuid
+              (str
+                (-> (int (/ msec 1000))
+                    (to-hex-string 8))
+                "-"
+                (-> (rand-bits 16)
+                    (to-hex-string 4))
+                "-"
+                (-> (rand-bits 16)
+                    (bit-and 0x0FFF)
+                    (bit-or 0x4000)
+                    (to-hex-string 4))
+                "-"
+                (-> (rand-bits 16)
+                    (bit-and 0x3FFF)
+                    (bit-or 0x8000)
+                    (to-hex-string 4))
+                "-"
+                (-> (rand-bits 16)
+                    (to-hex-string 4))
+                (-> (rand-bits 16)
+                    (to-hex-string 4))
+                (-> (rand-bits 16)
+                    (to-hex-string 4)))))))
 
 (defn squuid-time-millis
   "Returns time that was used in [[squuid]] call, in milliseconds, rounded to the closest second."
   [uuid]
-  #?(:clj  (-> (.getMostSignificantBits ^UUID uuid)
-               (bit-shift-right 32)
-               (* 1000))
+  #?(:clj (-> (.getMostSignificantBits ^UUID uuid)
+              (bit-shift-right 32)
+              (* 1000))
      :cljs (-> (subs (str uuid) 0 8)
                (js/parseInt 16)
                (* 1000))))

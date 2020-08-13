@@ -1,7 +1,7 @@
 (ns datahike.test
   (:require
-    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
-       :clj  [clojure.test :as t :refer        [is are deftest testing]])
+    #?(:cljs [cljs.test :as t :refer-macros [is are deftest testing]]
+       :clj [clojure.test :as t :refer [is are deftest testing]])
     #?(:clj [clojure.java.shell :as sh])
     datahike.test.core
     datahike.test.components
@@ -43,13 +43,12 @@
 (defn ^:export test-cljs []
   (datahike.test.core/wrap-res #(t/run-all-tests #"datahike\..*")))
 
-#?(:clj
-   (defn test-node [& args]
-     (let [res (apply sh/sh "node" "test_node.js" args)]
-       (println (:out res))
-       (binding [*out* *err*]
-         (println (:err res)))
-       (System/exit (:exit res)))))
+#?(:clj (defn test-node [& args]
+          (let [res (apply sh/sh "node" "test_node.js" args)]
+            (println (:out res))
+            (binding [*out* *err*]
+              (println (:err res)))
+            (System/exit (:exit res)))))
 
 (comment
 

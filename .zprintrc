@@ -1,0 +1,32 @@
+{:binding {
+           :justify?  true}
+ :fn-map  {"comment"               :flow
+           "try"                   :flow
+           "do"                    :flow
+           "when"                  :arg1-force-nl
+           "when-not"              :arg1-force-nl
+           "fn"                    :arg1-force-nl
+           "if"                    :arg1-force-nl
+           "testing"               :arg1-force-nl
+           "defmethod"             :arg2
+           "defn"                  :arg2
+           "transact"              :skip
+           "q"                     :skip
+           "format"                :gt2-force-nl
+           "case-tree"             :gt2-force-nl
+           "raise"                 :gt2-force-nl
+           "ex-info"               :gt2-force-nl
+           "are"                   :gt2-force-nl
+           "is"                    :gt2-force-nl
+           "vector"                :force-nl-body}
+ :list    {:indent-arg  2
+           :respect-nl? true}
+ :map     {:comma?    false
+           :force-nl? true
+           :sort?     false
+           :justify?  true
+           :lift-ns?  false}
+ :pair    {:justify? true}
+ :pair-fn {:hang? false}
+ :style   :community
+ :width   140}

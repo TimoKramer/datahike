@@ -1,12 +1,11 @@
 (ns ^:no-doc datahike.pull-api
   (:require
-   [datahike.db :as db]
-   #?@(:cljs [datalog.parser.pull :refer [PullSpec]])
-   [datalog.parser.pull :as dpp])
-  #?(:clj
-     (:import
-      [datahike.datom Datom]
-      [datalog.parser.pull PullSpec])))
+    [datahike.db :as db]
+    #?@(:cljs [datalog.parser.pull :refer [PullSpec]])
+    [datalog.parser.pull :as dpp])
+  #?(:clj (:import
+            [datahike.datom Datom]
+            [datalog.parser.pull PullSpec])))
 
 (defn- into!
   [transient-coll items]
@@ -19,12 +18,15 @@
   {:state     :pattern
    :pattern   pattern
    :wildcard? (:wildcard? pattern)
-   :specs     (-> pattern :attrs seq)
+   :specs     (-> pattern
+                  :attrs
+                  seq)
    :results   (transient [])
    :kvps      (transient {})
    :eids      eids
    :multi?    multi?
-   :recursion {:depth {} :seen #{}}})
+   :recursion {:depth {}
+               :seen  #{}}})
 
 (defn- subpattern-frame
   [pattern eids multi? attr]
@@ -46,7 +48,7 @@
   (let [{:keys [depth seen]} rec]
     (assoc rec
            :depth (update depth attr (fnil inc 0))
-           :seen (conj seen eid))))
+           :seen  (conj seen eid))))
 
 (defn- seen-eid?
   [frame eid]
@@ -61,9 +63,12 @@
 
 (defn- single-frame-result
   [key frame]
-  (some-> (:kvps frame) persistent! (get key)))
+  (some-> (:kvps frame)
+          persistent!
+          (get key)))
 
-(defn- recursion-result [frame]
+(defn- recursion-result
+  [frame]
   (single-frame-result ::recursion frame))
 
 (defn- recursion-frame
@@ -71,13 +76,14 @@
   (let [attr (:attr parent)
         rec  (push-recursion (:recursion parent) attr eid)]
     (assoc (subpattern-frame (:pattern parent) [eid] false ::recursion)
-           :recursion rec)))
+           :recursion
+           rec)))
 
 (defn- pull-recursion-frame
   [db [frame & frames]]
   (if-let [eids (seq (:eids frame))]
-    (let [frame  (reset-frame frame (rest eids) (recursion-result frame))
-          eid    (first eids)]
+    (let [frame (reset-frame frame (rest eids) (recursion-result frame))
+          eid   (first eids)]
       (or (pull-seen-eid frame frames eid)
           (conj frames frame (recursion-frame frame eid))))
     (let [kvps    (recursion-result frame)
@@ -88,16 +94,24 @@
 (defn- recurse-attr
   [db attr multi? eids eid parent frames]
   (let [{:keys [recursion pattern]} parent
-        depth  (-> recursion (get :depth) (get attr 0))]
-    (if (-> pattern :attrs (get attr) :recursion (= depth))
+        depth                       (-> recursion
+                                        (get :depth)
+                                        (get attr 0))]
+    (if (-> pattern
+            :attrs     (get attr)
+            :recursion (= depth))
       (conj frames parent)
       (pull-recursion-frame
-       db
-       (conj frames parent
-             {:state :recursion :pattern pattern
-              :attr attr :multi? multi? :eids eids
-              :recursion recursion
-              :results (transient [])})))))
+        db
+        (conj frames
+              parent
+              {:state     :recursion
+               :pattern   pattern
+               :attr      attr
+               :multi?    multi?
+               :eids      eids
+               :recursion recursion
+               :results   (transient [])})))))
 
 (let [pattern (PullSpec. true {})]
   (defn- expand-frame
@@ -109,27 +123,39 @@
 
 (defn- pull-attr-datoms
   [db attr-key attr eid forward? datoms opts [parent & frames]]
-  (let [limit (get opts :limit +default-limit+)
+  (let [limit    (get opts :limit +default-limit+)
         attr-key (or (:as opts) attr-key)
-        found (not-empty
-               (cond->> datoms
-                 limit (into [] (take limit))))]
+        found    (not-empty
+                   (cond->> datoms
+                            limit
+                            (into [] (take limit))))]
     (if found
       (let [ref?       (db/ref? db attr)
             component? (and ref? (db/component? db attr))
-            multi?     (if forward? (db/multival? db attr) (not component?))
-            datom-val  (if forward? (fn [d] (.-v ^Datom d)) (fn [d] (.-e ^Datom d)))]
+            multi?     (if forward?
+                         (db/multival? db attr)
+                         (not component?))
+            datom-val  (if forward?
+                         (fn [d]
+                           (.-v ^Datom d))
+                         (fn [d]
+                           (.-e ^Datom d)))]
         (cond
           (contains? opts :subpattern)
           (->> (subpattern-frame (:subpattern opts)
                                  (mapv datom-val found)
-                                 multi? attr-key)
+                                 multi?
+                                 attr-key)
                (conj frames parent))
 
           (contains? opts :recursion)
-          (recurse-attr db attr-key multi?
+          (recurse-attr db
+                        attr-key
+                        multi?
                         (mapv datom-val found)
-                        eid parent frames)
+                        eid
+                        parent
+                        frames)
 
           (and component? forward?)
           (->> found
@@ -138,9 +164,10 @@
                (conj frames parent))
 
           :else
-          (let [as-value  (cond->> datom-val
-                            ref? (comp #(hash-map :db/id %)))
-                single?   (not multi?)]
+          (let [as-value (cond->> datom-val
+                                  ref?
+                                  (comp #(hash-map :db/id %)))
+                single?  (not multi?)]
             (->> (cond-> (into [] (map as-value) found)
                    single? first)
                  (update parent :kvps assoc! attr-key)
@@ -163,11 +190,18 @@
             results  (if forward?
                        (db/-datoms db :eavt [eid attr])
                        (db/-datoms db :avet [attr eid]))]
-        (pull-attr-datoms db attr-key attr eid forward?
-                          results opts frames)))))
+        (pull-attr-datoms db
+                          attr-key
+                          attr
+                          eid
+                          forward?
+                          results
+                          opts
+                          frames)))))
 
 (def ^:private filter-reverse-attrs
-  (filter (fn [[k v]] (not= k (:attr v)))))
+  (filter (fn [[k v]]
+            (not= k (:attr v)))))
 
 (defn- expand-reverse-subpattern-frame
   [parent eid rattrs]
@@ -195,15 +229,21 @@
           opts          (-> frame
                             (get-in [:pattern :attrs])
                             (get attr {}))]
-      (pull-attr-datoms db attr attr (:eid frame) true datoms opts
+      (pull-attr-datoms db
+                        attr
+                        attr
+                        (:eid frame)
+                        true
+                        datoms
+                        opts
                         (conj frames (update frame :datoms rest))))
     (if-let [rattrs (->> (get-in frame [:pattern :attrs])
                          (into {} filter-reverse-attrs)
                          not-empty)]
-      (let [frame  (assoc frame
-                          :state       :expand-rev
-                          :expand-kvps (:kvps frame)
-                          :kvps        (transient {}))]
+      (let [frame (assoc frame
+                         :state       :expand-rev
+                         :expand-kvps (:kvps frame)
+                         :kvps        (transient {}))]
         (->> rattrs
              (expand-reverse-subpattern-frame frame (:eid frame))
              (conj frames frame)))
@@ -211,12 +251,17 @@
 
 (defn- pull-wildcard-expand
   [db frame frames eid pattern]
-  (let [datoms (group-by (fn [d] (.-a ^Datom d)) (db/-datoms db :eavt [eid]))
+  (let [datoms                   (group-by (fn [d]
+                                             (.-a ^Datom d))
+                                           (db/-datoms db :eavt [eid]))
         {:keys [attr recursion]} frame
-        rec (cond-> recursion
-              (some? attr) (push-recursion attr eid))]
-    (->> {:state :expand :kvps (transient {:db/id eid})
-          :eid eid :pattern pattern :datoms (seq datoms)
+        rec                      (cond-> recursion
+                                   (some? attr) (push-recursion attr eid))]
+    (->> {:state     :expand
+          :kvps      (transient {:db/id eid})
+          :eid       eid
+          :pattern   pattern
+          :datoms    (seq datoms)
           :recursion rec}
          (conj frames frame)
          (pull-expand-frame db))))
@@ -233,8 +278,8 @@
     (if (:wildcard? frame)
       (pull-wildcard db
                      (assoc frame
-                            :specs []
-                            :eid (first eids)
+                            :specs     []
+                            :eid       (first eids)
                             :wildcard? false)
                      frames)
       (if-let [specs (seq (:specs frame))]
@@ -242,7 +287,10 @@
               pattern    (:pattern frame)
               new-frames (conj frames (assoc frame :specs (rest specs)))]
           (pull-attr db spec (first eids) new-frames))
-        (->> frame :kvps persistent! not-empty
+        (->> frame
+             :kvps
+             persistent!
+             not-empty
              (reset-frame frame (rest eids))
              (conj frames)
              (recur db))))
@@ -256,8 +304,8 @@
     :pattern    (recur db (pull-pattern-frame db frames))
     :recursion  (recur db (pull-recursion-frame db frames))
     :done       (let [[f & remaining] frames
-                      result (cond-> (persistent! (:results f))
-                               (not (:multi? f)) first)]
+                      result          (cond-> (persistent! (:results f))
+                                        (not (:multi? f)) first)]
                   (if (seq remaining)
                     (->> (cond-> (first remaining)
                            result (update :kvps assoc! (:attr f) result))

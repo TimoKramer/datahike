@@ -5,14 +5,14 @@
             [datahike.query :as dq]
             [datahike.db :as db #?@(:cljs [:refer [CurrentDB]])]
             [datahike.impl.entity :as de])
-  #?(:clj
-     (:import [datahike.db HistoricalDB AsOfDB SinceDB FilteredDB]
-              [datahike.impl.entity Entity]
-              [java.util Date])))
+  #?(:clj (:import [datahike.db HistoricalDB AsOfDB SinceDB FilteredDB]
+                   [datahike.impl.entity Entity]
+                   [java.util Date])))
 
 (def
   ^{:arglists '([] [config])
-    :doc "Connects to a datahike database via configuration. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
+    :doc
+    "Connects to a datahike database via configuration. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
 
 The configuration for a connection is a subset of the Datahike configuration with only the store necessary: `:store`.
 
@@ -30,20 +30,23 @@ Connect to default in-memory configuration:
 
 Connect to a database with persistent store:
  `(connect {:store {:backend :file :path \"/tmp/example\"}})`"}
-
-  connect dc/connect)
+  connect
+  dc/connect)
 
 (def
   ^{:arglists '([config])
-    :doc "Checks if a database exists given a configuration URI or hash map.
+    :doc
+    "Checks if a database exists given a configuration URI or hash map.
           Usage:
 
             (database-exists? {:store {:backend :mem :id \"example\"}})"}
-  database-exists? dc/database-exists?)
+  database-exists?
+  dc/database-exists?)
 
 (def
   ^{:arglists '([] [config & deprecated-opts])
-    :doc "Creates a database via configuration. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
+    :doc
+    "Creates a database via configuration. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
 
   The configuration is a hash-map with keys: `:store`, `:initial-tx`, `:keep-history?`, `:schema-flexibility`, `:index`
 
@@ -74,18 +77,21 @@ Connect to a database with persistent store:
 
   ; Initial data after creation may be added using the `:initial-tx` attribute, which in this example adds a schema:
   (create-database {:store {:backend :mem :id \"example\"} :initial-tx [{:db/ident :name :db/valueType :db.type/string :db.cardinality/one}]})"}
-
   create-database
   dc/create-database)
 
-(def ^{:arglists '([config])
-       :doc      "Deletes a database given a database configuration. Storage configuration `:store` is mandatory.
+(def
+  ^{:arglists '([config])
+    :doc
+    "Deletes a database given a database configuration. Storage configuration `:store` is mandatory.
   For more information refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md)"}
   delete-database
   dc/delete-database)
 
-(def ^{:arglists '([conn tx-data])
-       :doc      "Applies transaction the underlying database value and atomically updates connection reference to point to the result of that transaction, new db value.
+(def
+  ^{:arglists '([conn tx-data])
+    :doc
+    "Applies transaction the underlying database value and atomically updates connection reference to point to the result of that transaction, new db value.
   Returns transaction report, a map:
 
        { :db-before ...       ; db value before transaction
@@ -170,21 +176,24 @@ Connect to a database with persistent store:
 
 (def ^{:arglists '([conn tx-data tx-meta])
        :doc      "The same as [[transact]] but returns Future to be realized."}
-  transact!
+     transact!
   dc/transact!)
 
 (def ^{:arglists '([conn tx-data])
-       :doc "Load entities directly"}
-  load-entities
+       :doc      "Load entities directly"}
+     load-entities
   dc/load-entities)
 
 
 (def ^{:arglists '([conn])
        :doc      "Releases a database connection"}
-  release dc/release)
+     release
+  dc/release)
 
-(def ^{:arglists '([db selector eid])
-       :doc      "Fetches data from database using recursive declarative description. See [docs.datomic.com/on-prem/pull.html](https://docs.datomic.com/on-prem/pull.html).
+(def
+  ^{:arglists '([db selector eid])
+    :doc
+    "Fetches data from database using recursive declarative description. See [docs.datomic.com/on-prem/pull.html](https://docs.datomic.com/on-prem/pull.html).
 
              Unlike [[entity]], returns plain Clojure map (not lazy).
 
@@ -195,10 +204,13 @@ Connect to a database with persistent store:
                  ;     :name    \"Ivan\"
                  ;     :likes   [:pizza]
                  ;     :friends [{:db/id 2, :name \"Oleg\"}]"}
-  pull dp/pull)
+  pull
+  dp/pull)
 
-(def ^{:arglists '([db selector eids])
-       :doc      "Same as [[pull]], but accepts sequence of ids and returns sequence of maps.
+(def
+  ^{:arglists '([db selector eids])
+    :doc
+    "Same as [[pull]], but accepts sequence of ids and returns sequence of maps.
 
              Usage:
 
@@ -207,7 +219,8 @@ Connect to a database with persistent store:
              ; => [{:db/id 1, :name \"Ivan\"}
              ;     {:db/id 2, :name \"Oleg\"}]
              ```"}
-  pull-many dp/pull-many)
+  pull-many
+  dp/pull-many)
 
 
 (defmulti q
@@ -222,19 +235,22 @@ Connect to a database with persistent store:
    ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
    ```"
   {:arglists '([query & inputs])}
-  (fn [query & inputs] (type query)))
+  (fn [query & inputs]
+    (type query)))
 
 (defmethod q clojure.lang.PersistentVector
   [query & inputs]
-  (dq/q {:query query :args inputs}))
+  (dq/q {:query query
+         :args  inputs}))
 
 (defmethod q clojure.lang.PersistentArrayMap
-  [{:keys [query args limit offset] :as query-map} & arg-list]
+  [{:keys [query args limit offset]
+    :as   query-map} & arg-list]
   (let [query (or query query-map)
-        args (or args arg-list)]
-    (dq/q {:query query
-           :args args
-           :limit limit
+        args  (or args arg-list)]
+    (dq/q {:query  query
+           :args   args
+           :limit  limit
            :offset offset})))
 
 (defn datoms
@@ -308,10 +324,10 @@ Connect to a database with persistent store:
    - Will not return datoms that are not part of the index (e.g. attributes with no `:db/index` in schema when querying `:avet` index).
      - `:eavt` and `:aevt` contain all datoms.
      - `:avet` only contains datoms for references, `:db/unique` and `:db/index` attributes."
-  ([db index]             {:pre [(db/db? db)]} (db/-datoms db index []))
-  ([db index c1]          {:pre [(db/db? db)]} (db/-datoms db index [c1]))
-  ([db index c1 c2]       {:pre [(db/db? db)]} (db/-datoms db index [c1 c2]))
-  ([db index c1 c2 c3]    {:pre [(db/db? db)]} (db/-datoms db index [c1 c2 c3]))
+  ([db index] {:pre [(db/db? db)]} (db/-datoms db index []))
+  ([db index c1] {:pre [(db/db? db)]} (db/-datoms db index [c1]))
+  ([db index c1 c2] {:pre [(db/db? db)]} (db/-datoms db index [c1 c2]))
+  ([db index c1 c2 c3] {:pre [(db/db? db)]} (db/-datoms db index [c1 c2 c3]))
   ([db index c1 c2 c3 c4] {:pre [(db/db? db)]} (db/-datoms db index [c1 c2 c3 c4])))
 
 (defn seek-datoms
@@ -366,8 +382,10 @@ Connect to a database with persistent store:
      :db/current-tx
      x)))
 
-(def ^{:arglists '([db eid])
-       :doc      "Retrieves an entity by its id from database. Entities are lazy map-like structures to navigate DataScript database content.
+(def
+  ^{:arglists '([db eid])
+    :doc
+    "Retrieves an entity by its id from database. Entities are lazy map-like structures to navigate DataScript database content.
 
              For `eid` pass entity id or lookup attr:
 
@@ -415,7 +433,8 @@ Connect to a database with persistent store:
              - Comparing entities just compares their ids. Be careful when comparing entities taken from differenct dbs or from different versions of the same db.
              - Accessed entity attributes are cached on entity itself (except backward references).
              - When printing, only cached attributes (the ones you have accessed before) are printed. See [[touch]]."}
-  entity de/entity)
+  entity
+  de/entity)
 
 (defn entity-db
   "Returns a db that entity was created from."
@@ -442,12 +461,13 @@ Connect to a database with persistent store:
   {:pre [(db/db? db)]}
   (if (is-filtered db)
     (let [^FilteredDB fdb db
-          orig-pred (.-pred fdb)
-          orig-db (.-unfiltered-db fdb)]
+          orig-pred       (.-pred fdb)
+          orig-db         (.-unfiltered-db fdb)]
       (FilteredDB. orig-db #(and (orig-pred %) (pred orig-db %))))
     (FilteredDB. db #(pred db %))))
 
-(defn- is-temporal? [x]
+(defn- is-temporal?
+  [x]
   (or (instance? HistoricalDB x)
       (instance? AsOfDB x)
       (instance? SinceDB x)))
@@ -460,11 +480,12 @@ Connect to a database with persistent store:
    (if (or (is-filtered db) (is-temporal? db))
      (throw (ex-info "Filtered DB cannot be modified" {:error :transaction/filtered}))
      (db/transact-tx-data (db/map->TxReport
-                           {:db-before db
-                            :db-after  db
-                            :tx-data   []
-                            :tempids   {}
-                            :tx-meta   tx-meta}) tx-data))))
+                            {:db-before db
+                             :db-after  db
+                             :tx-data   []
+                             :tempids   {}
+                             :tx-meta   tx-meta})
+                          tx-data))))
 
 (defn db-with
   "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."
@@ -484,9 +505,10 @@ Connect to a database with persistent store:
     (HistoricalDB. db)
     (throw (ex-info "history is only allowed on temporal indexed databases." {:config (db/-config db)}))))
 
-(defn- date? [d]
+(defn- date?
+  [d]
   #?(:cljs (instance? js/Date d)
-     :clj  (instance? Date d)))
+     :clj (instance? Date d)))
 
 (defn as-of
   "Returns the database state at given point in time (you may use either java.util.Date or transaction ID as long)."

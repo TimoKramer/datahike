@@ -1,0 +1,8 @@
+#! /bin/bash
+
+set -o xtrace
+set -o pipefail
+set -o errexit
+
+zprint '{:search-config? true}' < ${1} > ${1}.out;
+mv ${1}.out ${1}
