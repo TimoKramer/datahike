@@ -2,9 +2,14 @@
   (:require
    [clojure.test :refer :all]
    [datahike.api :as d]
-   [datahike-postgres.core]))
+   [datahike-jdbc.core]))
 
-(def config {:store {:backend :pg :host "localhost" :port 5432 :user "alice" :password "foo" :dbname "config-test"}})
+(def config {:store {:backend :jdbc
+                     :host "localhost"
+                     :port 5432
+                     :user "alice"
+                     :password "foo"
+                     :dbname "config-test"}})
 
 (defn config-record-pg-fixture [f]
   (d/delete-database config)
