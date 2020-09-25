@@ -84,7 +84,7 @@ Connect to a database with persistent store:
   delete-database
   dc/delete-database)
 
-(def ^{:arglists '([conn tx-data])
+(def ^{:arglists '([conn arg-map])
        :doc      "Applies transaction the underlying database value and atomically updates connection reference to point to the result of that transaction, new db value.
   Returns transaction report, a map:
 
