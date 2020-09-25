@@ -131,40 +131,42 @@ Connect to a database with persistent store:
       ; create an entity and set multiple attributes (in a single transaction
       ; equal tempids will be replaced with the same unused yet entid)
       (transact conn [[:db/add -1 :name \"Ivan\"]
-                       [:db/add -1 :likes \"fries\"]
-                       [:db/add -1 :likes \"pizza\"]
-                       [:db/add -1 :friend 296]])
+                      [:db/add -1 :likes \"fries\"]
+                      [:db/add -1 :likes \"pizza\"]
+                      [:db/add -1 :friend 296]])
   
       ; create an entity and set multiple attributes (alternative map form)
       (transact conn [{:db/id  -1
-                        :name   \"Ivan\"
-                        :likes  [\"fries\" \"pizza\"]
-                        :friend 296}])
+                       :name   \"Ivan\"
+                       :likes  [\"fries\" \"pizza\"]
+                       :friend 296}])
       
       ; update an entity (alternative map form). Can’t retract attributes in
       ; map form. For cardinality many attrs, value (fish in this example)
       ; will be added to the list of existing values
       (transact conn [{:db/id  296
-                        :name   \"Oleg\"
-                        :likes  [\"fish\"]}])
+                       :name   \"Oleg\"
+                       :likes  [\"fish\"]}])
 
-      ; ref attributes can be specified as nested map, that will create netsed entity as well
+      ; ref attributes can be specified as nested map, that will create a nested entity as well
       (transact conn [{:db/id  -1
-                        :name   \"Oleg\"
-                        :friend {:db/id -2
-                                 :name \"Sergey\"}])
-                                 
-      ; reverse attribute name can be used if you want created entity to become
+                       :name   \"Oleg\"
+                       :friend {:db/id -2
+                                :name \"Sergey\"}}])
+
+      ; schema is needed for using a reverse attribute
+      (is (transact conn [{:db/valueType :db.type/ref
+                           :db/cardinality :db.cardinality/one
+                           :db/ident :friend}]))
+
+      ; reverse attribute name can be used if you want a created entity to become
       ; a value in another entity reference
       (transact conn [{:db/id  -1
-                        :name   \"Oleg\"
-                        :_friend 296}])
-      ; equivalent to
-      (transact conn [{:db/id  -1, :name   \"Oleg\"}
-                       {:db/id 296, :friend -1}])
+                       :name   \"Oleg\"
+                       :_friend 296}])
       ; equivalent to
       (transact conn [[:db/add  -1 :name   \"Oleg\"]
-                       {:db/add 296 :friend -1]])"}
+                      {:db/add 296 :friend -1]])"}
   transact
   dc/transact)
 
