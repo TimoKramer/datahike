@@ -67,9 +67,9 @@
     (locking connection
       (update-and-flush-db connection tx-data d/transact))))
 
-(defn transact [connection tx-data]
+(defn transact [connection arg-map]
   (try
-    (deref (transact! connection tx-data))
+    (deref (transact! connection arg-map))
     (catch Exception e
       (log/errorf "Error during transaction %s" (.getMessage e))
       (throw (.getCause e)))))
