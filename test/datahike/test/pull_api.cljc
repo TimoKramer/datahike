@@ -74,6 +74,13 @@
           {:name "Eunan"} {:name "Rebecca"}]
          (d/pull-many test-db '[:name] [1 5 7 9]))))
 
+(deftest test-pull-arg-map
+  (is (= {:name "Petr" :aka ["Devil" "Tupen"]}
+         (d/pull test-db '{:selector [:name :aka] :eid 1})))
+
+  (is (= {:name "Matthew" :father {:db/id 3} :db/id 6}
+         (d/pull test-db '{:selector [:name :father :db/id] :eid 6}))))
+
 (deftest test-pull-reverse-attr-spec
   (is (= {:name "David" :_child [{:db/id 1}]}
          (d/pull test-db '[:name :_child] 2)))

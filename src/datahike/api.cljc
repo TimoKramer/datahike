@@ -170,11 +170,6 @@ Connect to a database with persistent store:
   transact
   dc/transact)
 
-(def ^{:arglists '([conn tx-data tx-meta])
-       :doc      "The same as [[transact]] but returns Future to be realized."}
-  transact!
-  dc/transact!)
-
 (def ^{:arglists '([conn tx-data])
        :doc "Load entities directly"}
   load-entities
@@ -184,7 +179,7 @@ Connect to a database with persistent store:
        :doc      "Releases a database connection"}
   release dc/release)
 
-(def ^{:arglists '([db selector eid])
+(def ^{:arglists '([db selector eid] [db arg-map])
        :doc      "Fetches data from database using recursive declarative description. See [docs.datomic.com/on-prem/pull.html](https://docs.datomic.com/on-prem/pull.html).
 
              Unlike [[entity]], returns plain Clojure map (not lazy).
@@ -195,7 +190,9 @@ Connect to a database with persistent store:
                  ; => {:db/id   1,
                  ;     :name    \"Ivan\"
                  ;     :likes   [:pizza]
-                 ;     :friends [{:db/id 2, :name \"Oleg\"}]"}
+                 ;     :friends [{:db/id 2, :name \"Oleg\"}]
+
+             The arity-2 version takes :selector and :eid in arg-map."}
   pull dp/pull)
 
 (def ^{:arglists '([db selector eids])
