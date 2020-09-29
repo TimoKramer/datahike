@@ -989,15 +989,15 @@
 
 (defmulti q (fn [query & args] (type query)))
 
-(defmethod q clojure.lang.LazySeq [query & inputs]
-  (q {:query query :args inputs}))
+(defmethod q clojure.lang.LazySeq [query & args]
+  (q {:query query :args args}))
 
-(defmethod q clojure.lang.PersistentVector [query & inputs]
-  (q {:query query :args inputs}))
+(defmethod q clojure.lang.PersistentVector [query & args]
+  (q {:query query :args args}))
 
-(defmethod q clojure.lang.PersistentArrayMap [query-map & inputs]
+(defmethod q clojure.lang.PersistentArrayMap [query-map & args]
   (let [query         (if (contains? query-map :query) (:query query-map) query-map)
-        args          (if (contains? query-map :args) (:args query-map) inputs)
+        args          (if (contains? query-map :args) (:args query-map) args)
         parsed-q      (memoized-parse-query query)
         find          (:qfind parsed-q)
         find-elements (dpip/find-elements find)
