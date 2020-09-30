@@ -85,7 +85,10 @@ Connect to a database with persistent store:
   dc/delete-database)
 
 (def ^{:arglists '([conn arg-map])
-       :doc      "Applies transaction the underlying database value and atomically updates connection reference to point to the result of that transaction, new db value.
+       :doc      "Applies transaction to the underlying database value and atomically updates the connection reference to point to the result of that transaction, the new db value.
+
+  Accepts the connection and a map or a vector as argument, specifying the transaction data.
+
   Returns transaction report, a map:
 
        { :db-before ...       ; db value before transaction
@@ -248,11 +251,13 @@ Connect to a database with persistent store:
                                                                      :limit limit
                                                                      :offset offset}))))
 
-(comment (type {}))
-(defn datoms
-  "Index lookup. Returns a sequence of datoms (lazy iterator over actual DB index) which components (e, a, v) match passed arguments.
+(defmulti datoms {:arglists '([db arg-map][db index & components])
+                  :doc "Index lookup. Returns a sequence of datoms (lazy iterator over actual DB index) which components
+   (e, a, v) match passed arguments. Datoms are sorted in index sort order. Possible `index` values
+   are: `:eavt`, `:aevt`, `:avet`.
 
-   Datoms are sorted in index sort order. Possible `index` values are: `:eavt`, `:aevt`, `:avet`.
+   Accepts db and a map as arguments with the keys `:index` and `:components` provided within the
+   map, or the arguments provided separately.
 
    Usage:
 
@@ -319,12 +324,25 @@ Connect to a database with persistent store:
    - Iterator supports efficient `first`, `next`, `reverse`, `seq` and is itself a sequence.
    - Will not return datoms that are not part of the index (e.g. attributes with no `:db/index` in schema when querying `:avet` index).
      - `:eavt` and `:aevt` contain all datoms.
-     - `:avet` only contains datoms for references, `:db/unique` and `:db/index` attributes."
-  ([db index]             {:pre [(db/db? db)]} (db/-datoms db index []))
-  ([db index c1]          {:pre [(db/db? db)]} (db/-datoms db index [c1]))
-  ([db index c1 c2]       {:pre [(db/db? db)]} (db/-datoms db index [c1 c2]))
-  ([db index c1 c2 c3]    {:pre [(db/db? db)]} (db/-datoms db index [c1 c2 c3]))
-  ([db index c1 c2 c3 c4] {:pre [(db/db? db)]} (db/-datoms db index [c1 c2 c3 c4])))
+     - `:avet` only contains datoms for references, `:db/unique` and `:db/index` attributes."}
+  (fn
+    ([db arg-map]
+     (type arg-map))
+    ([db index & components]
+     (type index))))
+
+(defmethod datoms clojure.lang.PersistentArrayMap
+  [db {:keys [index components]}]
+  {:pre [(db/db? db)]}
+  (db/-datoms db index components))
+
+(defmethod datoms clojure.lang.Keyword
+  [db index & components]
+  {:pre [(db/db? db)
+         (keyword? index)]}
+  (if (nil? components)
+    (db/-datoms db index [])
+    (db/-datoms db index components)))
 
 (defn seek-datoms
   "Similar to [[datoms]], but will return datoms starting from specified components and including rest of the database until the end of the index.
