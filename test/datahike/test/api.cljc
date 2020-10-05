@@ -163,6 +163,9 @@
                           [4 :likes "pizza"]}]})))
 
     ;; Datomic supports the query as string, map and list
+    ;; Datahike should support string
+    ;; Datahike supports map of vectors
+    ;; Datahike does not support list
     (is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
            (d/q '{:find [?value] :where [[_ :likes ?value]]}
                 #{[1 :likes "fries"]
@@ -170,6 +173,7 @@
                   [3 :likes "pie"]
                   [4 :likes "pizza"]})))
 
+    ;; TODO delete because using a list is not possible
     #_(is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
            (d/q {:query '([:find ?value :where [_ :likes ?value]])
                  :args [#{[1 :likes "fries"]

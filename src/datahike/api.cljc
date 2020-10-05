@@ -242,6 +242,7 @@ Connect to a database with persistent store:
 (defmethod q clojure.lang.PersistentVector
   [query & args] (dq/q {:query query :args args}))
 
+;; TODO allow timeout?
 (defmethod q clojure.lang.PersistentArrayMap
   ([arg-map] (dq/q arg-map))
   ([{:keys [query args limit offset] :as query-map} & more-args] (let [query (or query query-map)
@@ -259,63 +260,70 @@ Connect to a database with persistent store:
    Accepts db and a map as arguments with the keys `:index` and `:components` provided within the
    map, or the arguments provided separately.
 
+
    Usage:
 
-       ; find all datoms for entity id == 1 (any attrs and values)
-       ; sort by attribute, then value
-       (datoms db :eavt 1)
-       ; => (#datahike/Datom [1 :friends 2]
-       ;     #datahike/Datom [1 :likes \"fries\"]
-       ;     #datahike/Datom [1 :likes \"pizza\"]
-       ;     #datahike/Datom [1 :name \"Ivan\"])
+   Find all datoms for entity id == 1 (any attrs and values) sort by attribute, then value
 
-       ; find all datoms for entity id == 1 and attribute == :likes (any values)
-       ; sorted by value
-       (datoms db :eavt 1 :likes)
-       ; => (#datahike/Datom [1 :likes \"fries\"]
-       ;     #datahike/Datom [1 :likes \"pizza\"])
+       (datoms db :eavt 1) ; => (#datahike/Datom [1 :friends 2]
+                                 #datahike/Datom [1 :likes \"fries\"]
+                                 #datahike/Datom [1 :likes \"pizza\"]
+                                 #datahike/Datom [1 :name \"Ivan\"])
 
-       ; find all datoms for entity id == 1, attribute == :likes and value == \"pizza\"
-       (datoms db :eavt 1 :likes \"pizza\")
-       ; => (#datahike/Datom [1 :likes \"pizza\"])
+   Find all datoms for entity id == 1 and attribute == :likes (any values) sorted by value
 
-       ; find all datoms for attribute == :likes (any entity ids and values)
-       ; sorted by entity id, then value
-       (datoms db :aevt :likes)
-       ; => (#datahike/Datom [1 :likes \"fries\"]
-       ;     #datahike/Datom [1 :likes \"pizza\"]
-       ;     #datahike/Datom [2 :likes \"candy\"]
-       ;     #datahike/Datom [2 :likes \"pie\"]
-       ;     #datahike/Datom [2 :likes \"pizza\"])
+       (datoms db :eavt 1 :likes) ; => (#datahike/Datom [1 :likes \"fries\"]
+                                        #datahike/Datom [1 :likes \"pizza\"])
 
-       ; find all datoms that have attribute == `:likes` and value == `\"pizza\"` (any entity id)
-       ; `:likes` must be a unique attr, reference or marked as `:db/index true`
-       (datoms db :avet :likes \"pizza\")
-       ; => (#datahike/Datom [1 :likes \"pizza\"]
-       ;     #datahike/Datom [2 :likes \"pizza\"])
+   Find all datoms for entity id == 1, attribute == :likes and value == \"pizza\"
 
-       ; find all datoms sorted by entity id, then attribute, then value
+       (datoms db :eavt 1 :likes \"pizza\") ; => (#datahike/Datom [1 :likes \"pizza\"])
+
+   Find all datoms for attribute == :likes (any entity ids and values) sorted by entity id, then value
+
+       (datoms db :aevt :likes) ; => (#datahike/Datom [1 :likes \"fries\"]
+                                      #datahike/Datom [1 :likes \"pizza\"]
+                                      #datahike/Datom [2 :likes \"candy\"]
+                                      #datahike/Datom [2 :likes \"pie\"]
+                                      #datahike/Datom [2 :likes \"pizza\"])
+
+   Find all datoms that have attribute == `:likes` and value == `\"pizza\"` (any entity id)
+   `:likes` must be a unique attr, reference or marked as `:db/index true`
+
+       (datoms db :avet :likes \"pizza\") ; => (#datahike/Datom [1 :likes \"pizza\"]
+                                                #datahike/Datom [2 :likes \"pizza\"])
+
+   Find all datoms sorted by entity id, then attribute, then value
+
        (datoms db :eavt) ; => (...)
+
 
    Useful patterns:
 
-       ; get all values of :db.cardinality/many attribute
+   Get all values of :db.cardinality/many attribute
+
        (->> (datoms db :eavt eid attr) (map :v))
 
-       ; lookup entity ids by attribute value
+   Lookup entity ids by attribute value
+
        (->> (datoms db :avet attr value) (map :e))
 
-       ; find all entities with a specific attribute
+   Find all entities with a specific attribute
+
        (->> (datoms db :aevt attr) (map :e))
 
-       ; find “singleton” entity by its attr
+   Find “singleton” entity by its attr
+
        (->> (datoms db :aevt attr) first :e)
 
-       ; find N entities with lowest attr value (e.g. 10 earliest posts)
+   Find N entities with lowest attr value (e.g. 10 earliest posts)
+
        (->> (datoms db :avet attr) (take N))
 
-       ; find N entities with highest attr value (e.g. 10 latest posts)
+   Find N entities with highest attr value (e.g. 10 latest posts)
+
        (->> (datoms db :avet attr) (reverse) (take N))
+
 
    Gotchas:
 
