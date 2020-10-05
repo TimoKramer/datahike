@@ -52,7 +52,7 @@ Connect to a database with persistent store:
   - `:initial-tx` defines the first transaction into the database, often setting default data like the schema.
   - `:keep-history?` is a boolean that toggles whether Datahike keeps historical data.
   - `:schema-flexibility` can be set to either `:read` or `:write` setting the validation method for the data.
-  - `:read` validates the data when your read data from the database, `:write` validates the data when you transact new data.
+    - `:read` validates the data when your read data from the database, `:write` validates the data when you transact new data.
   - `:index` defines the data type of the index. Available are `:datahike.index/hitchhiker-tree`, `:datahike.index/persistent-set` (only available with in-memory storage)
   - `:name` defines your database name optionally, if not set, a random name is created
 
@@ -187,13 +187,13 @@ Connect to a database with persistent store:
 
              Unlike [[entity]], returns plain Clojure map (not lazy).
 
+
              Usage:
 
-                 (pull db [:db/id, :name, :likes, {:friends [:db/id :name]}] 1)
-                 ; => {:db/id   1,
-                 ;     :name    \"Ivan\"
-                 ;     :likes   [:pizza]
-                 ;     :friends [{:db/id 2, :name \"Oleg\"}]}
+             (pull db [:db/id, :name, :likes, {:friends [:db/id :name]}] 1) ; => {:db/id   1,
+                                                                                  :name    \"Ivan\"
+                                                                                  :likes   [:pizza]
+                                                                                  :friends [{:db/id 2, :name \"Oleg\"}]}
 
              The arity-2 version takes :selector and :eid in arg-map."}
   pull dp/pull)
@@ -203,13 +203,13 @@ Connect to a database with persistent store:
 
              Usage:
 
-             (pull-many db [:db/id :name] [1 2])
-             ; => [{:db/id 1, :name \"Ivan\"}
-             ;     {:db/id 2, :name \"Oleg\"}]"}
+             (pull-many db [:db/id :name] [1 2]) ; => [{:db/id 1, :name \"Ivan\"}
+                                                       {:db/id 2, :name \"Oleg\"}]"}
   pull-many dp/pull-many)
 
 (defmulti q {:arglists '([query & args] [arg-map])
              :doc "Executes a datalog query. See [docs.datomic.com/on-prem/query.html](https://docs.datomic.com/on-prem/query.html).
+
 
                    Usage:
 
@@ -218,8 +218,7 @@ Connect to a database with persistent store:
                       #{[1 :likes \"fries\"]
                         [2 :likes \"candy\"]
                         [3 :likes \"pie\"]
-                        [4 :likes \"pizza\"]})
-                   ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
+                        [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
                    or
 
@@ -230,8 +229,7 @@ Connect to a database with persistent store:
                        :args [#{[1 :likes \"fries\"]
                                 [2 :likes \"candy\"]
                                 [3 :likes \"pie\"]
-                                [4 :likes \"pizza\"]}]})
-                   ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
+                                [4 :likes \"pizza\"]}]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
                    The 1-arity function takes the arguments :query and :args as a map and optionally the additional arguments :offset and :limit.
 "}
@@ -246,13 +244,13 @@ Connect to a database with persistent store:
 (defmethod q clojure.lang.PersistentArrayMap
   ([arg-map] (dq/q arg-map))
   ([{:keys [query args limit offset] :as query-map} & more-args] (let [query (or query query-map)
-                                                                  args (or args more-args)]
-                                                              (dq/q {:query query
-                                                                     :args args
-                                                                     :limit limit
-                                                                     :offset offset}))))
+                                                                       args (or args more-args)]
+                                                                   (dq/q {:query query
+                                                                          :args args
+                                                                          :limit limit
+                                                                          :offset offset}))))
 
-(defmulti datoms {:arglists '([db arg-map][db index & components])
+(defmulti datoms {:arglists '([db arg-map] [db index & components])
                   :doc "Index lookup. Returns a sequence of datoms (lazy iterator over actual DB index) which components
    (e, a, v) match passed arguments. Datoms are sorted in index sort order. Possible `index` values
    are: `:eavt`, `:aevt`, `:avet`.
@@ -352,42 +350,52 @@ Connect to a database with persistent store:
     (db/-datoms db index [])
     (db/-datoms db index components)))
 
-(defn seek-datoms
-  "Similar to [[datoms]], but will return datoms starting from specified components and including rest of the database until the end of the index.
+(defmulti seek-datoms ^{:arglists '([db arg-map] [db index & components])
+                        :doc "Similar to [[datoms]], but will return datoms starting from specified components and including rest of the database until the end of the index.
 
    If no datom matches passed arguments exactly, iterator will start from first datom that could be considered “greater” in index order.
 
    Usage:
 
-       (seek-datoms db :eavt 1)
-       ; => (#datahike/Datom [1 :friends 2]
-       ;     #datahike/Datom [1 :likes \"fries\"]
-       ;     #datahike/Datom [1 :likes \"pizza\"]
-       ;     #datahike/Datom [1 :name \"Ivan\"]
-       ;     #datahike/Datom [2 :likes \"candy\"]
-       ;     #datahike/Datom [2 :likes \"pie\"]
-       ;     #datahike/Datom [2 :likes \"pizza\"])
+   (seek-datoms db :eavt 1) ; => (#datahike/Datom [1 :friends 2]
+                                  #datahike/Datom [1 :likes \"fries\"]
+                                  #datahike/Datom [1 :likes \"pizza\"]
+                                  #datahike/Datom [1 :name \"Ivan\"]
+                                  #datahike/Datom [2 :likes \"candy\"]
+                                  #datahike/Datom [2 :likes \"pie\"]
+                                  #datahike/Datom [2 :likes \"pizza\"])
 
-       (seek-datoms db :eavt 1 :name)
-       ; => (#datahike/Datom [1 :name \"Ivan\"]
-       ;     #datahike/Datom [2 :likes \"candy\"]
-       ;     #datahike/Datom [2 :likes \"pie\"]
-       ;     #datahike/Datom [2 :likes \"pizza\"])
+   (seek-datoms db :eavt 1 :name) ; => (#datahike/Datom [1 :name \"Ivan\"]
+                                        #datahike/Datom [2 :likes \"candy\"]
+                                        #datahike/Datom [2 :likes \"pie\"]
+                                        #datahike/Datom [2 :likes \"pizza\"])
 
-       (seek-datoms db :eavt 2)
-       ; => (#datahike/Datom [2 :likes \"candy\"]
-       ;     #datahike/Datom [2 :likes \"pie\"]
-       ;     #datahike/Datom [2 :likes \"pizza\"])
+   (seek-datoms db :eavt 2) ; => (#datahike/Datom [2 :likes \"candy\"]
+                                  #datahike/Datom [2 :likes \"pie\"]
+                                  #datahike/Datom [2 :likes \"pizza\"])
 
-       ; no datom [2 :likes \"fish\"], so starts with one immediately following such in index
-       (seek-datoms db :eavt 2 :likes \"fish\")
-       ; => (#datahike/Datom [2 :likes \"pie\"]
-       ;     #datahike/Datom [2 :likes \"pizza\"])"
-  ([db index] {:pre [(db/db? db)]} (db/-seek-datoms db index []))
-  ([db index c1] {:pre [(db/db? db)]} (db/-seek-datoms db index [c1]))
-  ([db index c1 c2] {:pre [(db/db? db)]} (db/-seek-datoms db index [c1 c2]))
-  ([db index c1 c2 c3] {:pre [(db/db? db)]} (db/-seek-datoms db index [c1 c2 c3]))
-  ([db index c1 c2 c3 c4] {:pre [(db/db? db)]} (db/-seek-datoms db index [c1 c2 c3 c4])))
+   No datom [2 :likes \"fish\"], so starts with one immediately following such in index
+
+   (seek-datoms db :eavt 2 :likes \"fish\") ; => (#datahike/Datom [2 :likes \"pie\"]
+                                                  #datahike/Datom [2 :likes \"pizza\"])"}
+  (fn
+    ([db arg-map]
+     (type arg-map))
+    ([db index & components]
+     (type index))))
+
+(defmethod seek-datoms clojure.lang.PersistentArrayMap
+  [db {:keys [index components]}]
+  {:pre [(db/db? db)]}
+  (db/-datoms db index components))
+
+(defmethod seek-datoms clojure.lang.Keyword
+  [db index & components]
+  {:pre [(db/db? db)
+         (keyword? index)]}
+  (if (nil? components)
+    (db/-datoms db index [])
+    (db/-datoms db index components)))
 
 (def ^:private last-tempid (atom -1000000))
 
@@ -490,25 +498,70 @@ Connect to a database with persistent store:
       (instance? AsOfDB x)
       (instance? SinceDB x)))
 
-(defn with
-  "Same as [[transact]], but applies to an immutable database value. Returns transaction report (see [[transact]])."
-  ([db tx-data] (with db tx-data nil))
-  ([db tx-data tx-meta]
-   {:pre [(db/db? db)]}
-   (if (or (is-filtered db) (is-temporal? db))
-     (throw (ex-info "Filtered DB cannot be modified" {:error :transaction/filtered}))
-     (db/transact-tx-data (db/map->TxReport
-                           {:db-before db
-                            :db-after  db
-                            :tx-data   []
-                            :tempids   {}
-                            :tx-meta   tx-meta}) tx-data))))
+;; TODO do better than {:foo :bar}
+(def ^{:arglists '([db arg-map])
+       :doc "Same as [[transact]]`, but applies to an immutable database value. Returns transaction report (see [[transact]]).
 
-(defn db-with
-  "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."
-  [db tx-data]
-  {:pre [(db/db? db)]}
-  (:db-after (with db tx-data)))
+             Accepts tx-data and tx-meta as a map.
+
+             ```
+             (d/with @conn {:tx-data [[:db/add 1 :name \"Ivan\"]]}) ; => {:db-before #datahike/DB {:max-tx 536870912 :max-eid 0},
+                                                                          :db-after #datahike/DB {:max-tx 536870913 :max-eid 1},
+                                                                          :tx-data [#datahike/Datom [1 :name \"Ivan\" 536870913]],
+                                                                          :tempids #:db{:current-tx 536870913},
+                                                                          :tx-meta nil}
+             ```
+
+             (d/with @conn {:tx-data [[:db/add 1 :name \"Ivan\"]]
+                            :tx-meta {:foo :bar}}) ; => {:db-before #datahike/DB {:max-tx 536870912 :max-eid 0},
+                                                         :db-after #datahike/DB {:max-tx 536870913 :max-eid 1},
+                                                         :tx-data [#datahike/Datom [1 :name \"Ivan\" 536870913]],
+                                                         :tempids #:db{:current-tx 536870913},
+                                                         :tx-meta {:foo :bar}}
+
+"}
+  with
+  (fn
+    ([db arg-map]
+     (let [tx-data (if (:tx-data arg-map) (:tx-data arg-map) arg-map)
+           tx-meta (if (:tx-meta arg-map) (:tx-meta arg-map) nil)]
+       (with db tx-data tx-meta)))
+    ([db tx-data tx-meta]
+     {:pre [(db/db? db)]}
+     (if (or (is-filtered db) (is-temporal? db))
+       (throw (ex-info "Filtered DB cannot be modified" {:error :transaction/filtered}))
+       (db/transact-tx-data (db/map->TxReport
+                             {:db-before db
+                              :db-after  db
+                              :tx-data   []
+                              :tempids   {}
+                              :tx-meta   tx-meta}) tx-data)))))
+
+(comment
+  (def cfg {:store {:backend :mem
+                    :id "with"}
+            :keep-history? false
+            :schema-flexibility :read})
+  (delete-database cfg)
+  (create-database cfg)
+  (def conn (connect cfg))
+  (def dvec #(vector (:e %) (:a %) (:v %)))
+  (clojure.pprint/pprint (with @conn {:tx-data [[:db/add 1 :name "Ivan"]]
+                                      :tx-meta {:foo :bar}})))
+
+(def ^{:arglists '([conn])
+       :doc "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."}
+  with-db
+  (fn [conn]
+    {:pre [(db/db? db)]}
+    (:db-after (with db tx-data))))
+
+(def ^{:arglists '([db tx-data])
+        :doc "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."}
+  db-with
+  (fn [db tx-data]
+    {:pre [(db/db? db)]}
+    (:db-after (with db tx-data))))
 
 (defn db
   "Returns the current state of the database you may interact with."
