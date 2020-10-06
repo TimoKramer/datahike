@@ -349,7 +349,7 @@
 ;; TODO testing properly on what?
 #_(deftest test-db-docs
   (let [cfg {:store {:backend :mem
-                     :id "with"}
+                     :id "db"}
              :keep-history? false
              :schema-flexibility :read}
         _ (d/delete-database cfg)
@@ -357,6 +357,39 @@
         conn (d/connect cfg)]
     (is (= {:max-tx 536870912 :max-eid 0}
            (into {} (d/db conn))))))
+
+#_(deftest test-history-docs
+  (let [cfg {:store {:backend :mem
+                     :id "history"}
+             :keep-history? true
+             :schema-flexibility :read}
+        _ (d/delete-database cfg)
+        _ (d/create-database cfg)
+        conn (d/connect cfg)]
+    (is (= {:max-tx 536870912 :max-eid 0}
+           (d/history @conn)))))
+
+#_(deftest test-as-of-docs
+    (let [cfg {:store {:backend :mem
+                       :id "as-of"}
+               :keep-history? false
+               :schema-flexibility :read}
+          _ (d/delete-database cfg)
+          _ (d/create-database cfg)
+          conn (d/connect cfg)]
+      (is (= "foo"
+             (into {} (d/as-of @conn))))))
+
+#_(deftest test-since-docs
+    (let [cfg {:store {:backend :mem
+                       :id "since"}
+               :keep-history? true
+               :schema-flexibility :read}
+          _ (d/delete-database cfg)
+          _ (d/create-database cfg)
+          conn (d/connect cfg)]
+      (is (= "foo"
+             (into {} (d/since @conn (java.util.Date.)))))))
 
 (deftest test-database-hash
   (testing "Hashing without history"

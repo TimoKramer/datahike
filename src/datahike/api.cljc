@@ -583,8 +583,8 @@ Connect to a database with persistent store:
 (defn since
   "Returns the database state since a given point in time (you may use either java.util.Date or a transaction ID as long).
   Be aware: the database contains only the datoms that were added since the date."
-  [db timepoint]
-  {:pre [(or (int? timepoint) (date? timepoint))]}
+  [db time-point]
+  {:pre [(or (int? time-point) (date? time-point))]}
   (if (db/-temporal-index? db)
-    (SinceDB. db timepoint)
+    (SinceDB. db time-point)
     (throw (ex-info "since is only allowed on temporal indexed databases." {:config (db/-config db)}))))
