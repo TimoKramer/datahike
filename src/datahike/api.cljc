@@ -549,13 +549,6 @@ Connect to a database with persistent store:
   (clojure.pprint/pprint (with @conn {:tx-data [[:db/add 1 :name "Ivan"]]
                                       :tx-meta {:foo :bar}})))
 
-(def ^{:arglists '([conn])
-       :doc "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."}
-  with-db
-  (fn [conn]
-    {:pre [(db/db? db)]}
-    (:db-after (with db tx-data))))
-
 (def ^{:arglists '([db tx-data])
         :doc "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."}
   db-with
@@ -581,10 +574,10 @@ Connect to a database with persistent store:
 
 (defn as-of
   "Returns the database state at given point in time (you may use either java.util.Date or transaction ID as long)."
-  [db timepoint]
-  {:pre [(or (int? timepoint) (date? timepoint))]}
+  [db time-point]
+  {:pre [(or (int? time-point) (date? time-point))]}
   (if (db/-temporal-index? db)
-    (AsOfDB. db timepoint)
+    (AsOfDB. db time-point)
     (throw (ex-info "as-of is only allowed on temporal indexed databases." {:config (db/-config db)}))))
 
 (defn since
