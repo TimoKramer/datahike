@@ -126,10 +126,20 @@
     ;; TESTING PULL-MANY API
     (is (= (d/pull-many @conn [:db/id :name] [1 2])
            [{:db/id 1, :name "Ivan"}
-            {:db/id 2, :name "Oleg"}]))
+            {:db/id 2, :name "Oleg"}]))))
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; TESTING Q API
+(deftest test-q-docs
+      (let [cfg {:store {:backend :mem
+                         :id "q"}
+                 :initial-tx [[:db/add -1 :name "Ivan"]
+                              [:db/add -1 :likes "fries"]
+                              [:db/add -1 :likes "pizza"]
+                              [:db/add -1 :friend 296]]
+                 :keep-history? false
+                 :schema-flexibility :read}
+            _ (d/delete-database cfg)
+            _ (d/create-database cfg)
+            conn (d/connect cfg)]
     (is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
            (d/q '[:find ?value :where [_ :likes ?value]]
                 #{[1 :likes "fries"]
@@ -162,24 +172,12 @@
                           [3 :likes "pie"]
                           [4 :likes "pizza"]}]})))
 
-    ;; Datomic supports the query as string, map and list
-    ;; Datahike should support string
-    ;; Datahike supports map of vectors
-    ;; Datahike does not support list
     (is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
            (d/q '{:find [?value] :where [[_ :likes ?value]]}
                 #{[1 :likes "fries"]
                   [2 :likes "candy"]
                   [3 :likes "pie"]
                   [4 :likes "pizza"]})))
-
-    ;; TODO delete because using a list is not possible
-    #_(is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
-             (d/q {:query '([:find ?value :where [_ :likes ?value]])
-                   :args [#{[1 :likes "fries"]
-                            [2 :likes "candy"]
-                            [3 :likes "pie"]
-                            [4 :likes "pizza"]}]})))
 
     (is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
            (d/q {:query "[:find ?value :where [_ :likes ?value]]"
@@ -188,16 +186,8 @@
                           [3 :likes "pie"]
                           [4 :likes "pizza"]}]})))
 
-    (is (= [{:db/id 2,
-             :name "Oleg",
-             :db/cardinality :db.cardinality/many,
-             :db/ident :friends}
-            {:db/id 1,
-             :friends [2],
-             :likes [:pizza],
-             :name "Ivan",
-             :db/cardinality :db.cardinality/many,
-             :db/ident :likes}]
+    ;; TODO better testing
+    (is (= [{:db/id 1, :friend 296, :likes "pizza", :name "Ivan"}]
            (d/q '[:find [(pull ?e [*]) ...]
                   :where [?e ?a ?v]]
                 @conn)))))
