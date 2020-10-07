@@ -20,7 +20,8 @@
             [lein-cljsbuild "1.1.8"]
             [lein-codox "0.10.7"]]
 
-  :codox {:namespaces [datahike.api]}
+  :codox {:metadata {:doc/format :markdown}
+          :namespaces [datahike.api]}
 
   :global-vars {*warn-on-reflection*   true
                 *print-namespace-maps* false}

@@ -186,7 +186,21 @@
                  :args [#{[1 :likes "fries"]
                           [2 :likes "candy"]
                           [3 :likes "pie"]
-                          [4 :likes "pizza"]}]})))))
+                          [4 :likes "pizza"]}]})))
+
+    (is (= [{:db/id 2,
+             :name "Oleg",
+             :db/cardinality :db.cardinality/many,
+             :db/ident :friends}
+            {:db/id 1,
+             :friends [2],
+             :likes [:pizza],
+             :name "Ivan",
+             :db/cardinality :db.cardinality/many,
+             :db/ident :likes}]
+           (d/q '[:find [(pull ?e [*]) ...]
+                  :where [?e ?a ?v]]
+                @conn)))))
 
 #_(deftest test-datoms-docs
     (let [cfg {:store {:backend :mem

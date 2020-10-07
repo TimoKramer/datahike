@@ -12,7 +12,7 @@
 
 (def
   ^{:arglists '([] [config])
-    :doc "Connects to a datahike database via configuration. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
+    :doc "Connects to a datahike database via configuration map. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
 
           The configuration for a connection is a subset of the Datahike configuration with only the store necessary: `:store`.
           
@@ -35,15 +35,15 @@
 
 (def
   ^{:arglists '([config])
-    :doc "Checks if a database exists given a configuration URI or hash map.
+    :doc "Checks if a database exists via configuration map.
           Usage:
 
-            (database-exists? {:store {:backend :mem :id \"example\"}})"}
+              (database-exists? {:store {:backend :mem :id \"example\"}})"}
   database-exists? dc/database-exists?)
 
 (def
   ^{:arglists '([] [config & deprecated-opts])
-    :doc "Creates a database via configuration. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
+    :doc "Creates a database via configuration map. For more information on the configuration refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md).
 
           The configuration is a hash-map with keys: `:store`, `:initial-tx`, `:keep-history?`, `:schema-flexibility`, `:index`
 
@@ -79,7 +79,7 @@
   dc/create-database)
 
 (def ^{:arglists '([config])
-       :doc      "Deletes a database given a database configuration. Storage configuration `:store` is mandatory.
+       :doc      "Deletes a database given via configuration map. Storage configuration `:store` is mandatory.
                   For more information refer to the [docs](https://github.com/replikativ/datahike/blob/master/doc/config.md)"}
   delete-database
   dc/delete-database)
@@ -91,11 +91,11 @@
 
                   Returns transaction report, a map:
 
-                  {:db-before ...       ; db value before transaction
-                   :db-after  ...       ; db value after transaction
-                   :tx-data   [...]     ; plain datoms that were added/retracted from db-before
-                   :tempids   {...}     ; map of tempid from tx-data => assigned entid in db-after
-                   :tx-meta   tx-meta } ; the exact value you passed as `tx-meta`
+                      {:db-before ...       ; db value before transaction
+                       :db-after  ...       ; db value after transaction
+                       :tx-data   [...]     ; plain datoms that were added/retracted from db-before
+                       :tempids   {...}     ; map of tempid from tx-data => assigned entid in db-after
+                       :tx-meta   tx-meta } ; the exact value you passed as `tx-meta`
 
                   Note! `conn` will be updated in-place and is not returned from [[transact]].
                   
@@ -212,6 +212,7 @@
                    Usage:
 
                    Query as parameter with additional args:
+
                        (q '[:find ?value
                             :where [_ :likes ?value]]
                           #{[1 :likes \"fries\"]
@@ -220,6 +221,7 @@
                             [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
                    Or query passed in arg-map:
+
                        (q {:query '[:find ?value
                                     :where [_ :likes ?value]]
                            :offset 2
@@ -230,6 +232,7 @@
                                     [4 :likes \"pizza\"]}]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
                    Or query passed as map of vectors:
+
                        (q '{:find [?value] :where [[_ :likes ?value]]}
                           #{[1 :likes \"fries\"]
                             [2 :likes \"candy\"]
@@ -237,6 +240,7 @@
                             [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
                    Or query passed as string:
+
                        (q {:query \"[:find ?value :where [_ :likes ?value]]\"
                            :args [#{[1 :likes \"fries\"]
                                     [2 :likes \"candy\"]
@@ -361,34 +365,34 @@
     (db/-datoms db index [])
     (db/-datoms db index components)))
 
-(defmulti seek-datoms ^{:arglists '([db arg-map] [db index & components])
-                        :doc "Similar to [[datoms]], but will return datoms starting from specified components and including rest of the database until the end of the index.
+(defmulti seek-datoms {:arglists '([db arg-map] [db index & components])
+                       :doc "Similar to [[datoms]], but will return datoms starting from specified components and including rest of the database until the end of the index.
 
-                              If no datom matches passed arguments exactly, iterator will start from first datom that could be considered “greater” in index order.
+                             If no datom matches passed arguments exactly, iterator will start from first datom that could be considered “greater” in index order.
 
-                              Usage:
+                             Usage:
 
-                                  (seek-datoms db :eavt 1) ; => (#datahike/Datom [1 :friends 2]
-                                                                 #datahike/Datom [1 :likes \"fries\"]
-                                                                 #datahike/Datom [1 :likes \"pizza\"]
-                                                                 #datahike/Datom [1 :name \"Ivan\"]
-                                                                 #datahike/Datom [2 :likes \"candy\"]
-                                                                 #datahike/Datom [2 :likes \"pie\"]
-                                                                 #datahike/Datom [2 :likes \"pizza\"])
+                                 (seek-datoms db :eavt 1) ; => (#datahike/Datom [1 :friends 2]
+                                                                #datahike/Datom [1 :likes \"fries\"]
+                                                                #datahike/Datom [1 :likes \"pizza\"]
+                                                                #datahike/Datom [1 :name \"Ivan\"]
+                                                                #datahike/Datom [2 :likes \"candy\"]
+                                                                #datahike/Datom [2 :likes \"pie\"]
+                                                                #datahike/Datom [2 :likes \"pizza\"])
 
-                                  (seek-datoms db :eavt 1 :name) ; => (#datahike/Datom [1 :name \"Ivan\"]
-                                                                       #datahike/Datom [2 :likes \"candy\"]
-                                                                       #datahike/Datom [2 :likes \"pie\"]
-                                                                       #datahike/Datom [2 :likes \"pizza\"])
+                                 (seek-datoms db :eavt 1 :name) ; => (#datahike/Datom [1 :name \"Ivan\"]
+                                                                      #datahike/Datom [2 :likes \"candy\"]
+                                                                      #datahike/Datom [2 :likes \"pie\"]
+                                                                      #datahike/Datom [2 :likes \"pizza\"])
 
-                                  (seek-datoms db :eavt 2) ; => (#datahike/Datom [2 :likes \"candy\"]
-                                                                 #datahike/Datom [2 :likes \"pie\"]
-                                                                 #datahike/Datom [2 :likes \"pizza\"])
+                                 (seek-datoms db :eavt 2) ; => (#datahike/Datom [2 :likes \"candy\"]
+                                                                #datahike/Datom [2 :likes \"pie\"]
+                                                                #datahike/Datom [2 :likes \"pizza\"])
 
-                              No datom [2 :likes \"fish\"], so starts with one immediately following such in index
+                             No datom [2 :likes \"fish\"], so starts with one immediately following such in index
 
-                                  (seek-datoms db :eavt 2 :likes \"fish\") ; => (#datahike/Datom [2 :likes \"pie\"]
-                                                                                 #datahike/Datom [2 :likes \"pizza\"])"}
+                                 (seek-datoms db :eavt 2 :likes \"fish\") ; => (#datahike/Datom [2 :likes \"pie\"]
+                                                                                #datahike/Datom [2 :likes \"pizza\"])"}
   (fn
     ([db arg-map]
      (type arg-map))
