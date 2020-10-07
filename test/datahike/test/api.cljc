@@ -88,27 +88,23 @@
 
 (deftest test-pull-docs
   (let [cfg {:store {:backend :mem
-                     :id "hashing"}
+                     :id "pull"}
+             :initial-tx [{:db/ident :likes
+                           :db/cardinality :db.cardinality/many}
+                          {:db/ident :friends
+                           :db/cardinality :db.cardinality/many}]
              :keep-history? false
              :schema-flexibility :read}
         _ (d/delete-database cfg)
         _ (d/create-database cfg)
-        conn (d/connect cfg)]
-    ;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; TESTING PULL API
-    (is (d/transact conn [{:db/ident :likes
-                           :db/cardinality :db.cardinality/many}
-                          {:db/ident :friends
-                           :db/cardinality :db.cardinality/many}]))
+        conn (d/connect cfg)
+        dvec #(vector (:e %) (:a %) (:v %))]
     (is (d/transact conn [{:db/id 1
                            :name "Ivan"
                            :likes :pizza
                            :friends 2}
                           {:db/id 2
                            :name "Oleg"}]))
-
-    #_(is (= (d/datoms @conn :eavt [])
-             []))
 
     (is (= {:db/id   1,
             :name    "Ivan"
@@ -120,26 +116,32 @@
             :name    "Ivan"
             :likes   [:pizza]
             :friends [{:db/id 2, :name "Oleg"}]}
-           (d/pull @conn '[:db/id :name :likes {:friends [:db/id :name]}] 1)))
+           (d/pull @conn '[:db/id :name :likes {:friends [:db/id :name]}] 1)))))
 
-    ;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; TESTING PULL-MANY API
+(deftest test-pull-many-docs
+  (let [cfg {:store {:backend :mem
+                     :id "hashing"}
+             :keep-history? false
+             :schema-flexibility :read}
+        _ (d/delete-database cfg)
+        _ (d/create-database cfg)
+        conn (d/connect cfg)]
     (is (= (d/pull-many @conn [:db/id :name] [1 2])
            [{:db/id 1, :name "Ivan"}
             {:db/id 2, :name "Oleg"}]))))
 
 (deftest test-q-docs
-      (let [cfg {:store {:backend :mem
-                         :id "q"}
-                 :initial-tx [[:db/add -1 :name "Ivan"]
-                              [:db/add -1 :likes "fries"]
-                              [:db/add -1 :likes "pizza"]
-                              [:db/add -1 :friend 296]]
-                 :keep-history? false
-                 :schema-flexibility :read}
-            _ (d/delete-database cfg)
-            _ (d/create-database cfg)
-            conn (d/connect cfg)]
+  (let [cfg {:store {:backend :mem
+                     :id "q"}
+             :initial-tx [[:db/add -1 :name "Ivan"]
+                          [:db/add -1 :likes "fries"]
+                          [:db/add -1 :likes "pizza"]
+                          [:db/add -1 :friend 296]]
+             :keep-history? false
+             :schema-flexibility :read}
+        _ (d/delete-database cfg)
+        _ (d/create-database cfg)
+        conn (d/connect cfg)]
     (is (= #{["fries"] ["candy"] ["pie"] ["pizza"]}
            (d/q '[:find ?value :where [_ :likes ?value]]
                 #{[1 :likes "fries"]
@@ -192,93 +194,116 @@
                   :where [?e ?a ?v]]
                 @conn)))))
 
-#_(deftest test-datoms-docs
-    (let [cfg {:store {:backend :mem
-                       :id "datoms"
-                       :initial-tx [{:db/ident :name
-                                     :db/type :db.type/string
-                                     :db/cardinality :db.cardinality/one}
-                                    {:db/ident :likes
-                                     :db/type :db.type/string
-                                     :db/cardinality :db.cardinality/many}
-                                    {:db/ident :friends
-                                     :db/type :db.type/ref
-                                     :db/cardinality :db.cardinality/many}]}
-               :keep-history? false
-               :schema-flexibility :read}
-          _ (d/delete-database cfg)
-          _ (d/create-database cfg)
-          db (d/connect cfg)
-          _ (d/transact db [{:db/id 1 :name "Ivan"}
-                            {:db/id 1 :likes ["fries" "pizza"]}
-                            {:db/id 1 :friends 2}])
-          dvec #(vector (:e %) (:a %) (:v %))]
+(deftest test-datoms-docs
+  (let [cfg {:store {:backend :mem
+                     :id "datoms"
+                     :initial-tx [{:db/ident :name
+                                   :db/type :db.type/string
+                                   :db/cardinality :db.cardinality/one}
+                                  {:db/ident :likes
+                                   :db/type :db.type/string
+                                   :db/cardinality :db.cardinality/many}
+                                  {:db/ident :friends
+                                   :db/type :db.type/ref
+                                   :db/cardinality :db.cardinality/many}]}
+             :keep-history? false
+             :schema-flexibility :read}
+        _ (d/delete-database cfg)
+        _ (d/create-database cfg)
+        db (d/connect cfg)
+        _ (d/transact db [{:db/id 1 :name "Ivan"}
+                          {:db/id 1 :likes "fries"}
+                          {:db/id 1 :likes "pizza"}
+                          {:db/id 1 :friends 2}])
+        dvec #(vector (:e %) (:a %) (:v %))]
 
     ;; find all datoms for entity id == 1 (any attrs and values)
     ;; sort by attribute, then value
-      (is (= "fail"
-             (map dvec (d/datoms @db :eavt))))
-    ;; => (#datahike/Datom [1 :friends 2]
-    ;;     #datahike/Datom [1 :likes \"fries\"]
-    ;;     #datahike/Datom [1 :likes \"pizza\"]
-    ;;     #datahike/Datom [1 :name \"Ivan\"])
+    (is (= '([1 :friends 2]
+             [1 :likes "fries"]
+             [1 :likes "pizza"]
+             [1 :name "Ivan"])
+           (map dvec (d/datoms @db {:index :eavt}))))
+          ;; => (#datahike/Datom [1 :friends 2]
+          ;;     #datahike/Datom [1 :likes \"fries\"]
+          ;;     #datahike/Datom [1 :likes \"pizza\"]
+          ;;     #datahike/Datom [1 :name \"Ivan\"])
+
+    (is (= '([1 :friends 2]
+             [1 :likes "fries"]
+             [1 :likes "pizza"]
+             [1 :name "Ivan"])
+           (map dvec (d/datoms @db {:index :eavt :components [1]}))))
 
     ;; find all datoms for entity id == 1 and attribute == :likes (any values)
     ;; sorted by value
-      (is (= "fail"
-             (map dvec (d/datoms @db :eavt 1 :likes))))
+    (is (= '([1 :likes "fries"]
+             [1 :likes "pizza"])
+           (map dvec (d/datoms @db {:index :eavt :components [1 :likes]}))))
     ;; => (#datahike/Datom [1 :likes \"fries\"]
     ;;     #datahike/Datom [1 :likes \"pizza\"])
 
     ;; find all datoms for entity id == 1, attribute == :likes and value == \"pizza\"
-      (is (= "fail"
-             (map dvec (d/datoms @db :eavt 1 :likes "pizza"))))
+    (is (= '([1 :likes "pizza"])
+           (map dvec (d/datoms @db {:index :eavt :components [1 :likes "pizza"]}))))
     ;; => (#datahike/Datom [1 :likes \"pizza\"])
 
     ;; find all datoms for attribute == :likes (any entity ids and values)
     ;; sorted by entity id, then value
-      (is (= "fail"
-             (map dvec (d/datoms @db :aevt :likes))))
-    ;; => (#datahike/Datom [1 :likes \"fries\"]
-    ;;     #datahike/Datom [1 :likes \"pizza\"]
-    ;;     #datahike/Datom [2 :likes \"candy\"]
-    ;;     #datahike/Datom [2 :likes \"pie\"]
-    ;;     #datahike/Datom [2 :likes \"pizza\"])
+    (is (= '([1 :likes "fries"]
+             [1 :likes "pizza"]
+             [2 :likes "candy"]
+             [2 :likes "pie"]
+             [2 :likes "pizza"])
+           (map dvec (d/datoms @db {:index :aevt :components [:likes]}))))
+      ;; => (#datahike/Datom [1 :likes \"fries\"]
+      ;;     #datahike/Datom [1 :likes \"pizza\"]
+      ;;     #datahike/Datom [2 :likes \"candy\"]
+      ;;     #datahike/Datom [2 :likes \"pie\"]
+      ;;     #datahike/Datom [2 :likes \"pizza\"])
 
     ;; find all datoms that have attribute == `:likes` and value == `\"pizza\"` (any entity id)
     ;; `:likes` must be a unique attr, reference or marked as `:db/index true`
-      (is (= "fail"
-             (map dvec (d/datoms @db :avet :likes "pizza"))))
+    (is (= '([1 :likes "pizza"]
+             [2 :likes "pizza"])
+           (map dvec (d/datoms @db {:index :avet :components [:likes "pizza"]}))))
     ;; => (#datahike/Datom [1 :likes \"pizza\"]
     ;;     #datahike/Datom [2 :likes \"pizza\"])
 
     ;; find all datoms sorted by entity id, then attribute, then value
-      (is (= "fail"
-             (map dvec (d/datoms @db :eavt)))) ; => (...)))
+    (is (= "fail"
+           (map dvec (d/datoms @db {:index :eavt})))) ; => (...)))
 
     ;; get all values of :db.cardinality/many attribute
-      (is (= "fail"
-             (->> (d/datoms @db :eavt 1 :likes) (map :v))))
+    (is (= "fail"
+           (->> (d/datoms @db {:index :eavt :components [1 :likes]})
+                (map :v))))
 
     ;; lookup entity ids by attribute value
-      (is (= "fail"
-             (->> (d/datoms @db :avet :likes "pizza") (map :e))))
+    (is (= "fail"
+           (->> (d/datoms @db {:index :avet :components [:likes "pizza"]})
+                (map :e))))
 
     ;; find all entities with a specific attribute
-      (is (= "fail"
-             (->> (d/datoms @db :aevt :name) (map :e))))
+    (is (= "fail"
+           (->> (d/datoms @db {:index :aevt :components [:name]})
+                (map :e))))
 
     ;; find “singleton” entity by its attr
-      (is (= "fail"
-             (->> (d/datoms @db :aevt :name) first :e)))
+    (is (= "fail"
+           (->> (d/datoms @db {:index :aevt :components [:name]})
+                first :e)))
 
     ;; find N entities with lowest attr value (e.g. 10 earliest posts)
-      (is (= "fail"
-             (->> (d/datoms @db :avet :name) (take 2))))
+    (is (= "fail"
+           (->> (d/datoms @db {:index :avet :components [:name]})
+                (take 2))))
 
     ;; find N entities with highest attr value (e.g. 10 latest posts)
-      (is (= "fail"
-             (->> (d/datoms @db :avet :name) (reverse) (take 2))))))
+    (is (= "fail"
+           (->> (d/datoms @db {:index :avet :components [:name]})
+                (reverse)
+                (take 2))))))
 
 #_(deftest test-seek-datoms-doc
     (let [cfg {:store {:backend :mem
@@ -352,26 +377,26 @@
 
 ;; TODO testing properly on what?
 #_(deftest test-db-docs
-  (let [cfg {:store {:backend :mem
-                     :id "db"}
-             :keep-history? false
-             :schema-flexibility :read}
-        _ (d/delete-database cfg)
-        _ (d/create-database cfg)
-        conn (d/connect cfg)]
-    (is (= {:max-tx 536870912 :max-eid 0}
-           (into {} (d/db conn))))))
+    (let [cfg {:store {:backend :mem
+                       :id "db"}
+               :keep-history? false
+               :schema-flexibility :read}
+          _ (d/delete-database cfg)
+          _ (d/create-database cfg)
+          conn (d/connect cfg)]
+      (is (= {:max-tx 536870912 :max-eid 0}
+             (into {} (d/db conn))))))
 
 #_(deftest test-history-docs
-  (let [cfg {:store {:backend :mem
-                     :id "history"}
-             :keep-history? true
-             :schema-flexibility :read}
-        _ (d/delete-database cfg)
-        _ (d/create-database cfg)
-        conn (d/connect cfg)]
-    (is (= {:max-tx 536870912 :max-eid 0}
-           (d/history @conn)))))
+    (let [cfg {:store {:backend :mem
+                       :id "history"}
+               :keep-history? true
+               :schema-flexibility :read}
+          _ (d/delete-database cfg)
+          _ (d/create-database cfg)
+          conn (d/connect cfg)]
+      (is (= {:max-tx 536870912 :max-eid 0}
+             (d/history @conn)))))
 
 #_(deftest test-as-of-docs
     (let [cfg {:store {:backend :mem
