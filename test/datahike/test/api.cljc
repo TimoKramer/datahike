@@ -305,23 +305,35 @@
                 (reverse)
                 (take 2))))))
 
-#_(deftest test-seek-datoms-doc
+(deftest test-seek-datoms-doc
     (let [cfg {:store {:backend :mem
                        :id "seek-datoms"}
-               :initial-tx [{:db/ident :name
-                             :db/type :db.type/string
-                             :db/cardinality :db.cardinality/one}
-                            {:db/ident :likes
-                             :db/type :db.type/string
-                             :db/cardinality :db.cardinality/many}
-                            {:db/ident :friends
-                             :db/type :db.type/ref
-                             :db/cardinality :db.cardinality/many}]
+               ;;:initial-tx [{:db/ident :name
+               ;;              :db/type :db.type/string
+               ;;              :db/cardinality :db.cardinality/one}
+               ;;             {:db/ident :likes
+               ;;              :db/type :db.type/string
+               ;;              :db/cardinality :db.cardinality/many}
+               ;;             {:db/ident :friends
+               ;;              :db/type :db.type/ref
+               ;;              :db/cardinality :db.cardinality/many}]
                :keep-history? false
                :schema-flexibility :read}
           _ (d/delete-database cfg)
           _ (d/create-database cfg)
           db (d/connect cfg)
+          _ (d/transact db [{:db/id 3
+                             :db/ident :name
+                             :db/type :db.type/string
+                             :db/cardinality :db.cardinality/one}
+                            {:db/id 3
+                             :db/ident :likes
+                             :db/type :db.type/string
+                             :db/cardinality :db.cardinality/many}
+                            {:db/id 3
+                             :db/ident :friends
+                             :db/type :db.type/ref
+                             :db/cardinality :db.cardinality/many}])
           _ (d/transact db [{:db/id 1 :name "Ivan"}
                             {:db/id 1 :likes ["fries" "pizza"]}
                             {:db/id 1 :friends 2}])
@@ -336,22 +348,22 @@
                [2 :likes "candy"]
                [2 :likes "pie"]
                [2 :likes "pizza"])
-             (map dvec (d/seek-datoms @db :eavt 1))))
+             (map dvec (d/seek-datoms @db {:index :eavt :components [1]}))))
 
       (is (= '([1 :name "Ivan"]
                [2 :likes "candy"]
                [2 :likes "pie"]
                [2 :likes "pizza"])
-             (map dvec (d/seek-datoms @db :eavt 1 :name))))
+             (map dvec (d/seek-datoms @db {:index :eavt :components [1 :name]}))))
 
       (is (= '([2 :likes "candy"]
                [2 :likes "pie"]
                [2 :likes "pizza"])
-             (map dvec (d/seek-datoms @db :eavt 2))))
+             (map dvec (d/seek-datoms @db {:index :eavt :components [2]}))))
 
       (is (= '([2 :likes "pie"]
                [2 :likes "pizza"])
-             (map dvec (d/seek-datoms @db :eavt 2 :likes "fish"))))))
+             (map dvec (d/seek-datoms @db {:index :eavt :components [2 :likes "fish"]}))))))
 
 (deftest test-with-docs
   (let [cfg {:store {:backend :mem
