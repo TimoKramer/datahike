@@ -247,7 +247,7 @@
                                     [3 :likes \"pie\"]
                                     [4 :likes \"pizza\"]}]})
 
-                   Query can not be passed as list. The 1-arity function takes the arguments :query and :args as a map and optionally the additional arguments :offset and :limit."}
+                   Query passed as map needs vectors as values. Query can not be passed as list. The 1-arity function takes the arguments :query and :args as a map and optionally the additional arguments :offset and :limit."}
   (fn
     ([arg-map] (type arg-map))
     ([query & args] (type query))))
