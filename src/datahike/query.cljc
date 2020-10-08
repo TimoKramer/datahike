@@ -987,17 +987,22 @@
       :strs (convert-fn (map str mapping-keys))
       :syms (convert-fn (map symbol mapping-keys)))))
 
+;; TODO from api-ns only coming map without additional args -> can this be removed?
+;; better to have a multimethod on the actual query -> vector/map/string (maybe even list??)
 (defmulti q (fn [query & args] (type query)))
 
-(defmethod q clojure.lang.LazySeq [query & inputs]
-  (q {:query query :args inputs}))
+;; TODO can this be removed?
+(defmethod q clojure.lang.LazySeq [query & args]
+  (q {:query query :args args}))
 
-(defmethod q clojure.lang.PersistentVector [query & inputs]
-  (q {:query query :args inputs}))
+;; TODO can this be removed?
+(defmethod q clojure.lang.PersistentVector [query & args]
+  (q {:query query :args args}))
 
-(defmethod q clojure.lang.PersistentArrayMap [query-map & inputs]
+(defmethod q clojure.lang.PersistentArrayMap [query-map & args]
   (let [query         (if (contains? query-map :query) (:query query-map) query-map)
-        args          (if (contains? query-map :args) (:args query-map) inputs)
+        query         (if (string? query) (edn/read-string query) query)
+        args          (if (contains? query-map :args) (:args query-map) args)
         parsed-q      (memoized-parse-query query)
         find          (:qfind parsed-q)
         find-elements (dpip/find-elements find)
