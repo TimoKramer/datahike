@@ -206,64 +206,49 @@
                                                                 {:db/id 2, :name \"Oleg\"}]"}
   pull-many dp/pull-many)
 
-(defmulti q {:arglists '([query & args] [arg-map])
-             :doc "Executes a datalog query. See [docs.datomic.com/on-prem/query.html](https://docs.datomic.com/on-prem/query.html).
+(def ^{:arglists '([query & args] [arg-map])
+       :doc "Executes a datalog query. See [docs.datomic.com/on-prem/query.html](https://docs.datomic.com/on-prem/query.html).
 
-                   Usage:
+             Usage:
 
-                   Query as parameter with additional args:
+             Query as parameter with additional args:
 
-                       (q '[:find ?value
-                            :where [_ :likes ?value]]
-                          #{[1 :likes \"fries\"]
-                            [2 :likes \"candy\"]
-                            [3 :likes \"pie\"]
-                            [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
+                 (q '[:find ?value
+                      :where [_ :likes ?value]]
+                    #{[1 :likes \"fries\"]
+                      [2 :likes \"candy\"]
+                      [3 :likes \"pie\"]
+                      [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
-                   Or query passed in arg-map:
+             Or query passed in arg-map:
 
-                       (q {:query '[:find ?value
-                                    :where [_ :likes ?value]]
-                           :offset 2
-                           :limit 1
-                           :args [#{[1 :likes \"fries\"]
-                                    [2 :likes \"candy\"]
-                                    [3 :likes \"pie\"]
-                                    [4 :likes \"pizza\"]}]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
+                 (q {:query '[:find ?value
+                              :where [_ :likes ?value]]
+                     :offset 2
+                     :limit 1
+                     :args [#{[1 :likes \"fries\"]
+                              [2 :likes \"candy\"]
+                              [3 :likes \"pie\"]
+                              [4 :likes \"pizza\"]}]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
-                   Or query passed as map of vectors:
+             Or query passed as map of vectors:
 
-                       (q '{:find [?value] :where [[_ :likes ?value]]}
-                          #{[1 :likes \"fries\"]
-                            [2 :likes \"candy\"]
-                            [3 :likes \"pie\"]
-                            [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
+                 (q '{:find [?value] :where [[_ :likes ?value]]}
+                    #{[1 :likes \"fries\"]
+                      [2 :likes \"candy\"]
+                      [3 :likes \"pie\"]
+                      [4 :likes \"pizza\"]}) ; => #{[\"fries\"] [\"candy\"] [\"pie\"] [\"pizza\"]}
 
-                   Or query passed as string:
+             Or query passed as string:
 
-                       (q {:query \"[:find ?value :where [_ :likes ?value]]\"
-                           :args [#{[1 :likes \"fries\"]
-                                    [2 :likes \"candy\"]
-                                    [3 :likes \"pie\"]
-                                    [4 :likes \"pizza\"]}]})
+                 (q {:query \"[:find ?value :where [_ :likes ?value]]\"
+                     :args [#{[1 :likes \"fries\"]
+                              [2 :likes \"candy\"]
+                              [3 :likes \"pie\"]
+                              [4 :likes \"pizza\"]}]})
 
-                   Query passed as map needs vectors as values. Query can not be passed as list. The 1-arity function takes the arguments :query and :args as a map and optionally the additional arguments :offset and :limit."}
-  (fn
-    ([arg-map] (type arg-map))
-    ([query & args] (type query))))
-
-(defmethod q clojure.lang.PersistentVector
-  [query & args] (dq/q {:query query :args args}))
-
-;; TODO allow timeout?
-(defmethod q clojure.lang.PersistentArrayMap
-  ([arg-map] (dq/q arg-map))
-  ([{:keys [query args limit offset] :as query-map} & more-args] (let [query (or query query-map)
-                                                                       args (or args more-args)]
-                                                                   (dq/q {:query query
-                                                                          :args args
-                                                                          :limit limit
-                                                                          :offset offset}))))
+             Query passed as map needs vectors as values. Query can not be passed as list. The 1-arity function takes the arguments :query and :args as a map and optionally the additional arguments :offset and :limit."}
+  q dq/q)
 
 (defmulti datoms {:arglists '([db arg-map] [db index & components])
                   :doc "Index lookup. Returns a sequence of datoms (lazy iterator over actual DB index) which components
