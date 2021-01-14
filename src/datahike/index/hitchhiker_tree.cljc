@@ -5,8 +5,10 @@
             [hitchhiker.tree :as tree]
             [hitchhiker.tree.utils.gc :refer [mark]]
             [konserve.gc :refer [sweep!]]
+            [hasch.core :as h]
             [datahike.constants :refer [e0 tx0 emax txmax]]
             [datahike.datom :as dd]
+            [datahike.index.hitchhiker-tree.upsert :as ups]
             [clojure.set :as set]
             [clojure.core.async :as async])
   #?(:clj (:import [clojure.lang AMapEntry]
@@ -123,13 +125,13 @@
 
 (defn -upsert [tree ^Datom datom index-type]
   (let [datom-as-vec (datom->node datom index-type)]
-    (async/<?? (hmsg/enqueue tree [(assoc (ups/new-UpsertOp datom-as-vec)
-                                          :tag (h/uuid))]))))
+    (ha/<?? (hmsg/enqueue tree [(assoc (ups/new-UpsertOp datom-as-vec)
+                                       :tag (h/uuid))]))))
 
 (defn -temporal-upsert [tree ^Datom datom index-type]
   (let [datom-as-vec (datom->node datom index-type)]
-    (async/<?? (hmsg/enqueue tree [(assoc (ups/new-temporal-UpsertOp datom-as-vec)
-                                          :tag (h/uuid))]))))
+    (ha/<?? (hmsg/enqueue tree [(assoc (ups/new-temporal-UpsertOp datom-as-vec)
+                                       :tag (h/uuid))]))))
 
 (defn init-tree
   "Create tree with datoms"
