@@ -27,10 +27,10 @@ workflows:
           context: dockerhub-deploy
           requires:
             - tools/setup
-      - tools/backward-compatibility-test:
-          context: dockerhub-deploy
-          requires:
-            - tools/setup
+              #- tools/backward-compatibility-test:
+              #    context: dockerhub-deploy
+              #    requires:
+              #      - tools/setup
       - tools/integrationtest-postgresql:
           context: dockerhub-deploy
           requires:
