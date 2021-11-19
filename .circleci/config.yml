@@ -41,5 +41,5 @@ workflows:
             - tools/setup
             - tools/format
             - tools/unittest
-            - tools/backward-compatibility-test
+              #- tools/backward-compatibility-test
             - tools/integrationtest-postgresql
