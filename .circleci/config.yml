@@ -4,14 +4,31 @@ orbs:
   tools: replikativ/clj-tools@0
 
 jobs:
-  build-and-deploy:
+  build:
     executor: tools/clojurecli
     steps:
       - attach_workspace:
           at: /home/circleci
       - run:
-          name: build-and-deploy
-          command: clojure -T:build ci
+          name: clean
+          command: clojure -T:build clean
+      - run:
+          name: jar
+          command: clojure -T:build jar
+  deploy:
+    executor: tools/clojurecli
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - add_ssh_keys:
+          fingerprints:
+            - "ba:37:bf:3e:12:f2:d6:43:c7:a2:ec:81:b7:2e:09:61"
+      - run:
+          name: tag
+          command: clojure -T:build tag
+      - run:
+          name: deploy
+          command: clojure -T:build deploy
 
 workflows:
   build-test-and-deploy:
@@ -19,6 +36,10 @@ workflows:
       - tools/setup:
           context: dockerhub-deploy
           setup_cljs: false
+      - build:
+          context: dockerhub-deploy
+          requires:
+            - tools/setup
       - tools/format:
           context: dockerhub-deploy
           requires:
@@ -27,19 +48,24 @@ workflows:
           context: dockerhub-deploy
           requires:
             - tools/setup
-              #- tools/backward-compatibility-test:
-              #    context: dockerhub-deploy
-              #    requires:
-              #      - tools/setup
+      - tools/backward-compatibility-test:
+          context: dockerhub-deploy
+          requires:
+            - tools/setup
       - tools/integrationtest-postgresql:
           context: dockerhub-deploy
           requires:
             - tools/setup
-      - build-and-deploy:
-          context: dockerhub-deploy
+      - deploy:
+          context:
+            - dockerhub-deploy
+            - clojars-deploy
+          filters:
+            branches:
+              only: switch-to-tools-build
           requires:
             - tools/setup
             - tools/format
             - tools/unittest
-              #- tools/backward-compatibility-test
+            - tools/backward-compatibility-test
             - tools/integrationtest-postgresql
