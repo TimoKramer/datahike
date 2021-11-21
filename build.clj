@@ -31,7 +31,7 @@
           :jar-file jar-file}))
 
 (defn tag [_]
-  (b/process {:command-args "printenv"})
+  (b/process {:command-args ["printenv"]})
   (b/process {:command-args ["ssh-keyscan" "-p" "443" "ssh.github.com"]
               :out :append
               :out-file "/home/circleci/.ssh/known_hosts"})
