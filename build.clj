@@ -31,9 +31,10 @@
           :jar-file jar-file}))
 
 (defn tag [_]
+  (b/process {:command-args "printenv"})
   (b/process {:command-args ["ssh-keyscan" "-p" "443" "ssh.github.com"]
               :out :append
-              :out-file "~/.ssh/known_hosts"})
+              :out-file "/home/circleci/.ssh/known_hosts"})
   (b/git-process {:git-args "config --global user.email info@lambdaforge.io"})
   (b/git-process {:git-args "config --global user.name \"CircleCI Release-Pipeline\""})
   (let [branch (b/git-process {:git-args "remote"})]
