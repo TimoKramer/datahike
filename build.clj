@@ -31,14 +31,23 @@
           :jar-file jar-file}))
 
 (defn tag [_]
-  (b/git-process {:git-args (format "tag -a v%s -m Release" version)}))
+  (let [branch (b/git-process {:git-args "remote"})]
+    (b/git-process {:git-args (format "tag -a v%s -m Release" version)})
+    (b/git-process {:git-args (format "push --tags %s" branch)})))
 
 (defn deploy [_]
   (println "Don't forget to set CLOJARS_USERNAME and CLOJARS_PASSWORD env vars.")
   (dd/deploy {:installer :remote :artifact jar-file
               :pom-file (b/pom-path {:lib lib :class-dir class-dir})}))
 
-(defn ci []
+(defn install [_]
+  (b/install {:basis (b/create-basis {})
+              :lib lib
+              :version version
+              :jar-file jar-file
+              :class-dir class-dir}))
+
+(defn ci [_]
   (clean nil)
   (jar nil)
   (tag nil)
@@ -50,4 +59,5 @@
   (compile nil)
   (jar nil)
   (tag nil)
-  (deploy nil))
+  (deploy nil)
+  (install nil))
