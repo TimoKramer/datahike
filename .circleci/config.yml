@@ -106,6 +106,7 @@ workflows:
           context:
             - dockerhub-deploy
             - clojars-deploy
+            - github-token
           filters:
             branches:
               only: switch-to-tools-build
