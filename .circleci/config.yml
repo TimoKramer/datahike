@@ -1,6 +1,7 @@
 version: 2.1
 
 orbs:
+  github-cli: circleci/github-cli@1.0.5
   tools: replikativ/clj-tools@0
 
 jobs:
@@ -115,3 +116,12 @@ workflows:
             - tools/unittest
             - tools/backward-compatibility-test
             - tools/integrationtest-postgresql
+      - github-cli/release
+          context:
+            - dockerhub-deploy
+            - github-token
+          filters:
+            branches:
+              only: switch-to-tools-build
+          tag: 42.0.0
+          title: The only release

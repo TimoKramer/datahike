@@ -1,4 +1,4 @@
-{:deps {org.clojure/clojure                         {:mvn/version "1.10.3"}
+{:deps {org.clojure/clojure                         {:mvn/version "1.10.1"}
         org.clojure/clojurescript                   {:mvn/version "1.10.597"}
         io.replikativ/hitchhiker-tree               {:mvn/version "0.1.11"}
         persistent-sorted-set/persistent-sorted-set {:mvn/version "0.1.2"}

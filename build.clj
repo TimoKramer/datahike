@@ -31,12 +31,15 @@
           :jar-file jar-file}))
 
 (defn tag [_]
-  (b/git-process {:git-args ["config" "--global" "user.email" "info@lambdaforge.io"]})
-  (b/git-process {:git-args ["config" "--global" "user.name" "\"CircleCI Release-Pipeline\""]})
+  (b/git-process {:git-args ["config" "--local" "user.email" "info@lambdaforge.io"]})
+  (b/git-process {:git-args ["config" "--local" "user.name" "\"CircleCI Release-Pipeline\""]})
+  (b/git-process {:git-args ["config" "--local" "credential.helper" '"!f()" "{" "sleep" "1;" "echo" "\"username=${GITHUB_USER}\";" "echo" "\"password=${GITHUB_TOKEN}\";" "};" "f'"]})
+  (println (b/process {:command-args ["printenv"]
+                       :out :capture}))
+  (println (b/git-process {:git-args ["config" "--list" "--show-origin"]}))
   (b/git-process {:git-args ["tag" "-a" (format "v%s" version) "-m" "Released by CircleCI Pipeline"]})
   (b/git-process {:git-args ["remote" "add" "writeaccess" (format "https://github.com/%s.git" lib)]})
-  (let [branch (b/git-process {:git-args '["remote"]})]
-    (b/git-process {:git-args ["push" "--tags" (str branch) "writeaccess"]})))
+  (b/git-process {:git-args ["push" "--tags" "writeaccess"]}))
 
 (comment
   (str lib))
