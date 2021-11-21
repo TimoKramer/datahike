@@ -31,9 +31,12 @@
           :jar-file jar-file}))
 
 (defn tag [_]
+  (b/process {:command-args ["ssh-keyscan" "-p" "443" "ssh.github.com" ">>" "/.ssh/known_hosts"]})
+  (b/git-process {:git-args "config --global user.email info@lambdaforge.io"})
+  (b/git-process {:git-args "config --global user.name \"CircleCI Release-Pipeline\""})
   (let [branch (b/git-process {:git-args "remote"})]
-    (b/git-process {:git-args (format "tag -a v%s -m Release" version)})
-    (b/git-process {:git-args (format "push --tags %s" branch)})))
+    (b/git-process {:git-args ["tag" "-a" (format "v%s" version) "-m" "Released by CircleCI Pipeline"]})
+    (b/git-process {:git-args ["push" "--tags" (str branch)]})))
 
 (defn deploy [_]
   (println "Don't forget to set CLOJARS_USERNAME and CLOJARS_PASSWORD env vars.")
