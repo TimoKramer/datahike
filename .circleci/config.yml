@@ -11,10 +11,10 @@ jobs:
           at: /home/circleci
       - run:
           name: clean
-          command: clojure -T:build clean
+          command: clojure -Sthreads 1 -T:build clean
       - run:
           name: jar
-          command: clojure -T:build jar
+          command: clojure -Sthreads 1 -T:build jar
   deploy:
     executor: tools/clojurecli
     steps:
@@ -25,10 +25,10 @@ jobs:
             - "ba:37:bf:3e:12:f2:d6:43:c7:a2:ec:81:b7:2e:09:61"
       - run:
           name: tag
-          command: clojure -T:build tag
+          command: clojure -Sthreads 1 -T:build tag
       - run:
           name: deploy
-          command: clojure -T:build deploy
+          command: clojure -Sthreads 1 -T:build deploy
   setup:
     executor: tools/clojurecli
     parameters:
@@ -51,7 +51,7 @@ jobs:
             - deps-{{ checksum "deps.edn" }}
             - deps-
       - run: clojure -P
-      - run: clojure -T:build compile
+      - run: clojure -Sthreads 1 -T:build compile
       - save_cache:
           key: deps-{{ checksum "deps.edn" }}
           paths:
@@ -110,6 +110,7 @@ workflows:
               only: switch-to-tools-build
           requires:
             - setup
+            - build
             - tools/format
             - tools/unittest
             - tools/backward-compatibility-test
