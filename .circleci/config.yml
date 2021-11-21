@@ -29,33 +29,78 @@ jobs:
       - run:
           name: deploy
           command: clojure -T:build deploy
+  setup:
+    executor: tools/clojurecli
+    parameters:
+      setup_cljs:
+        type: boolean
+        default: true
+    steps:
+      - restore_cache:
+          keys:
+            - source-{{ .Branch }}-{{ .Revision }}
+            - source-{{ .Branch }}
+            - source-
+      - checkout
+      - save_cache:
+          key: source-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - .git
+      - restore_cache:
+          keys:
+            - deps-{{ checksum "deps.edn" }}
+            - deps-
+      - run: clojure -P
+      - run: clojure -T:build compile
+      - save_cache:
+          key: deps-{{ checksum "deps.edn" }}
+          paths:
+            - /home/circleci/.m2
+      - when:
+          condition: <<parameters.setup_cljs>>
+          steps:
+            - restore_cache:
+                keys:
+                  - npm-{{ checksum "package-lock.json" }}
+                  - npm-
+            - run: npm ci
+            - save_cache:
+                key: npm-{{ checksum "package-lock.json" }}
+                paths:
+                  - /home/circleci/.npm
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - .m2
+            - .npm
+            - replikativ
 
 workflows:
   build-test-and-deploy:
     jobs:
-      - tools/setup:
+      - setup:
           context: dockerhub-deploy
           setup_cljs: false
       - build:
           context: dockerhub-deploy
           requires:
-            - tools/setup
+            - setup
       - tools/format:
           context: dockerhub-deploy
           requires:
-            - tools/setup
+            - setup
       - tools/unittest:
           context: dockerhub-deploy
           requires:
-            - tools/setup
+            - setup
       - tools/backward-compatibility-test:
           context: dockerhub-deploy
           requires:
-            - tools/setup
+            - setup
       - tools/integrationtest-postgresql:
           context: dockerhub-deploy
           requires:
-            - tools/setup
+            - setup
       - deploy:
           context:
             - dockerhub-deploy
@@ -64,7 +109,7 @@ workflows:
             branches:
               only: switch-to-tools-build
           requires:
-            - tools/setup
+            - setup
             - tools/format
             - tools/unittest
             - tools/backward-compatibility-test
