@@ -31,14 +31,15 @@
           :jar-file jar-file}))
 
 (defn tag [_]
-  (b/process {:command-args ["printenv"]})
+  (b/process {:command-args ["printenv"]
+              :out :capture})
   (b/process {:command-args ["ssh-keyscan" "-p" "443" "ssh.github.com"]
               :out :append
               :out-file "/home/circleci/.ssh/known_hosts"})
   (b/git-process {:git-args "config --global user.email info@lambdaforge.io"})
   (b/git-process {:git-args "config --global user.name \"CircleCI Release-Pipeline\""})
+  (b/git-process {:git-args ["tag" "-a" (format "v%s" version) "-m" "Released by CircleCI Pipeline"]})
   (let [branch (b/git-process {:git-args "remote"})]
-    (b/git-process {:git-args ["tag" "-a" (format "v%s" version) "-m" "Released by CircleCI Pipeline"]})
     (b/git-process {:git-args ["push" "--tags" (str branch)]})))
 
 (defn deploy [_]
