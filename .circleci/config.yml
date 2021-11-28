@@ -68,9 +68,7 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/
           paths:
-            - .m2
-            - .npm
-            - replikativ
+            - replikativ/target
   deploy:
     executor: tools/clojurecli
     steps:
