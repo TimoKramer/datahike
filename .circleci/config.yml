@@ -95,15 +95,15 @@ workflows:
       - tools/unittest:
           context: dockerhub-deploy
           requires:
-            - setup
+            - build
       - tools/backward-compatibility-test:
           context: dockerhub-deploy
           requires:
-            - setup
+            - build
       - tools/integrationtest-postgresql:
           context: dockerhub-deploy
           requires:
-            - setup
+            - build
       - deploy:
           context:
             - dockerhub-deploy
@@ -113,8 +113,6 @@ workflows:
             branches:
               only: switch-to-tools-build
           requires:
-            - setup
-            - build
             - tools/format
             - tools/unittest
             - tools/backward-compatibility-test
