@@ -68,7 +68,9 @@ jobs:
       - persist_to_workspace:
           root: /home/circleci/
           paths:
-            - replikativ/target
+            - .m2
+            - .npm
+            - replikativ
   deploy:
     executor: tools/clojurecli
     steps:
@@ -77,6 +79,14 @@ jobs:
       - run:
           name: deploy
           command: clojure -Sthreads 1 -T:build deploy
+  release:
+    executor: tools/clojurecli
+    steps:
+      - attach_workspace:
+          at: /home/circleci
+      - run:
+          name: deploy
+          command: clojure -Sthreads 1 -T:build release
 
 workflows:
   build-test-and-deploy:
@@ -117,15 +127,12 @@ workflows:
             - tools/unittest
             - tools/backward-compatibility-test
             - tools/integrationtest-postgresql
-      - github-cli/release:
+      - release:
           context:
             - dockerhub-deploy
             - github-token
           filters:
             branches:
               only: switch-to-tools-build
-          tag: 42.0.0
-          title: The only release
-          notes-file: CHANGELOG.md
           requires:
             - deploy
