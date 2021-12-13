@@ -25,17 +25,17 @@ The following functions from the `datahike.api` namespace are different from Dat
 - [connect](#connect)
 - [create-database](#create-database)
 - [database-exists?](#database-exists)
-- [db-with](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#db-with)
+- db-with
 - [delete-database](#delete-database)
-- [entity](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#entity)
-- [entity-db](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#entity-db)
-- [filter](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#filter)
-- [is-filtered](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#is-filtered)
-- [load-entities](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#load-entities)
-- [pull-many](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#pull-many)
-- [release](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#release)
-- [seek-datoms](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#seek-datoms)
-- [tempid](https://cljdoc.org/d/io.replikativ/datahike/0.3.6/api/datahike.api#tempid)
+- entity
+- entity-db
+- filter
+- is-filtered
+- load-entities
+- pull-many
+- release
+- seek-datoms
+- tempid
 - [with](#with)
 
 Additionally, datahike supports most functions from [datascript](https://github.com/tonsky/datascript)

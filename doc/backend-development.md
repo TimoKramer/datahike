@@ -1,11 +1,13 @@
 # Backend Development
 
-Implementing a new backend to use for datahike does not require much effort as there are only a handful of methods for multimethods must be created. 
+Implementing a new backend to use for Datahike does not require much effort as there are only a handful of methods that Datahike expects. 
 In order to keep things tidy, we have agreed on some conventions:
 
 1. Keep all implementations for a backend within one namespace.
 2. Name this namespace `datahike-{backendname}.core`.
 3. Make sure, all multimethods are defined for the new backend you are developing.
+4. Use the [integration-tests](https://github.com/replikativ/datahike/blob/main/src/datahike/integration_test.cljc)
+   provided by the `datahike.integration-test`-namespace.
 
 As an example, you may have a look at the implementation of our [JDBC](https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/) backend, i.e.
 [datahike-jdbc](https://github.com/replikativ/datahike-jdbc).
