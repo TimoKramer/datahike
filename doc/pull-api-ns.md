@@ -76,7 +76,7 @@ Map with keys
   - recursion: 2 frames per depth
   - wildcard: 1 frame
   
-![Frame State Diagram](https://raw.githubusercontent.com/replikativ/datahike/documentation/doc/development/pull-frame-state-diagram.jpg)
+![Frame State Diagram](./assets/pull-frame-state-diagram.jpg)
 
 ## Pull API Usage
 
@@ -85,7 +85,8 @@ See also the official [Datahike documentation](https://cljdoc.org/d/io.replikati
 Setup for examples:
 
 ```clojure
-(require '(datahike [core :as d]))
+(require '[datahike.db :as db]
+         '[datahike.api :as d])
 
 (def schema
   {:aka    {:db/cardinality :db.cardinality/many}
