@@ -631,7 +631,8 @@
       (throw (ex-info "since is only allowed on temporal indexed databases." {:config (db/-config db)})))))
 
 (def ^{:arglists '([db time-point])
-       :doc "Returns the database state at given point in time (you may use either java.util.Date or transaction ID as long).
+       :doc "Returns the database state at given point in time
+             (you may use either java.util.Date or transaction ID as long).
 
 
                  (transact conn {:tx-data [{:db/ident :name
