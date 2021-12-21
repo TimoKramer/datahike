@@ -58,11 +58,12 @@
 
 (s/fdef
   create-database
-  :args (s/cat :config (s/or :config spec/Config
-                             :deprecated/uri string?)
-               :initial-tx (s/? (s/cat :k (s/? (s/and #(= % :initial-tx))) :v spec/Transactions))
-               :temporal-index (s/? (s/cat :k (s/? (s/and #(= % :temporal-index))) :v boolean?))
-               :schema-on-read (s/? (s/cat :k (s/? (s/and #(= % :schema-on-read))) :v boolean?)))
+  :args (s/alt :config (s/cat :backend (s/or :config spec/Config
+                                             :deprecated/uri string?)
+                              :initial-tx (s/? (s/cat :k (s/? (s/and #(= % :initial-tx))) :v spec/Transactions))
+                              :temporal-index (s/? (s/cat :k (s/? (s/and #(= % :temporal-index))) :v boolean?))
+                              :schema-on-read (s/? (s/cat :k (s/? (s/and #(= % :schema-on-read))) :v boolean?)))
+               :nil (s/cat))
   :ret nil?)
 (def
   ^{:arglists '([] [config & deprecated-opts])
