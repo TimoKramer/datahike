@@ -669,7 +669,7 @@
 
 (s/fdef
   db-with
-  :args (s/cat :db db/db? :tx-data spec/Transactions)
+  :args (s/nilable (s/cat :db db/db? :tx-data spec/Transactions))
   :ret db/db?)
 (def ^{:arglists '([db tx-data])
        :doc "Applies transaction to an immutable db value, returning new immutable db value. Same as `(:db-after (with db tx-data))`."}
