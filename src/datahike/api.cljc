@@ -861,8 +861,7 @@
   listen
   :args (s/alt :no-key (s/cat :conn spec/ConnectionAtom :callback fn?)
                :with-key (s/cat :conn spec/ConnectionAtom :key any? :callback fn?))
-  :ret any?
-  :fn #(= (:ret %) (-> % :args :key)))
+  :ret any?)
 (def ^{:arglists '([conn callback] [conn key callback])
        :doc "Listen for changes on the given connection. Whenever a transaction is applied to the database via
              [[transact]], the callback is called with the transaction report. `key` is any opaque unique value.
