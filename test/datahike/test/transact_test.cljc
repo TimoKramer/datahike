@@ -357,6 +357,8 @@
              {:foo "bar"}))))
 
 (comment
+  (require '[orchestra.spec.test :as st])
+  (st/instrument)
   (def conn (du/setup-db))
   (def tx (d/transact conn {:tx-data [{:name "Sergey"
                                        :age  5}]
