@@ -97,5 +97,3 @@
   ;; there are race conditions somehwere when creating and deleting many dbs
   (clerk/show! "notebooks/time_travel.clj")
   (clerk/show! "notebooks/time_variance.clj"))
-
-  
