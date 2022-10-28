@@ -1,13 +1,17 @@
+;; # Datahike Schema
 (ns datahike.notebooks.schema
-  (:require [datahike.api :as d]))
+  (:require [datahike.api :as d]
+            [nextjournal.clerk :as clerk])
+  (:import [clojure.lang ExceptionInfo]))
 
-;; The first example assumes you know your data model in advanve,
+;; The first example assumes you know your data model in advance,
 ;; so you we can use a schema-on-write approach in contrast to a schema-on-read
 ;; approach. Have a look at the documentation in `/doc/schema.md` for more
 ;; information on the different types of schema flexibility. After the first
 ;; example we will have a short schema-on-read example.
 
-; first define data model
+;; ## Schema-on-Write
+;; Define data model
 (def schema [{:db/ident :contributor/name
               :db/valueType :db.type/string
               :db/unique :db.unique/identity
@@ -39,119 +43,128 @@
              {:db/ident :language/clojure}
              {:db/ident :language/rust}])
 
-;; define configuration
-(def cfg {:store {:backend :mem
-                  :id "schema-intro"}
-          :schema-flexibility :write})
+;; Define (schema-on-write) configuration
+(def sow-config {:store {:backend :mem}
+                 :id "schema-intro"
+                 :schema-flexibility :write})
 
-;; cleanup previous database
-(when (d/database-exists? cfg)
-  (d/delete-database cfg))
+;; Cleanup previous database
+(when (d/database-exists? sow-config)
+  (d/delete-database sow-config))
 
-;; create the in-memory database
-(d/create-database cfg)
+;; Create the in-memory database
+(d/create-database sow-config)
 
-;; connect to it
-(def conn (d/connect cfg))
+;; Connect to it
+(def sow-conn (d/connect sow-config))
 
-;; add the schema
+;; Add the schema
+(d/transact sow-conn schema)
 
-(d/transact conn schema)
+;; Let's insert our first user Alice
+(d/transact sow-conn [{:contributor/name "Alice" :contributor/email "alice@exam.ple"}])
 
-;; let's insert our first user
-(d/transact conn [{:contributor/name "alice" :contributor/email "alice@exam.ple"}])
-
-;; let's find her with a query
+;; Let's find Alice with a query
 (def find-name-email '[:find ?e ?n ?em :where [?e :contributor/name ?n] [?e :contributor/email ?em]])
 
-(d/q find-name-email @conn)
+(d/q find-name-email @sow-conn)
 
-;; let's find her directly, as contributor/name is a unique, indexed identity
-(d/pull @conn '[*] [:contributor/name "alice"])
+;; Let's find her directly
+;; Since contributor/name is a unique, indexed identity you can use attribute and value as a lookup ref instead of an entity-ID
+(d/pull @sow-conn '[*] [:contributor/name "Alice"])
 
-;; add a second email, as we have a many cardinality, we can have several ones as a user
-(d/transact conn [{:db/id [:contributor/name "alice"] :contributor/email "alice@test.test"}])
+;; Add a second email
+;; The email-attribute is defined with many-cardinality in our schema, so we can have several ones for a user
+(d/transact sow-conn [{:db/id [:contributor/name "Alice"] :contributor/email "alice@test.test"}])
 
-;; let's see both emails
-(d/q find-name-email @conn)
+;; Let's see both emails (We need to wait half a second for the transaction to show up)
+(do (Thread/sleep 500)
+    (d/q find-name-email @sow-conn))
 
-;; try to add something completely not defined in the schema
-(d/transact conn [{:something "different"}])
+;; Try to add something completely not defined in the schema
+(try (d/transact sow-conn [{:something "different"}])
+     (catch ExceptionInfo e
+       (ex-message e)))
 
-;; try to add wrong contributor values
-(d/transact conn [{:contributor/email :alice}])
+;; Try to add wrong contributor values
+(try (d/transact sow-conn [{:contributor/email :alice}])
+     (catch ExceptionInfo e
+       (ex-message e)))
 
-;; add another contributor by using a the alternative transaction schema that expects a hash map with tx-data attribute
-(d/transact conn {:tx-data [{:contributor/name "bob" :contributor/email "bob@ac.me"}]})
+;; Add another contributor by using the alternative transaction schema that expects a hash map with tx-data attribute
+(d/transact sow-conn {:tx-data [{:contributor/name "Bob" :contributor/email "bob@ac.me"}]})
 
-(d/q find-name-email @conn)
+(d/q find-name-email @sow-conn)
 
-(d/pull @conn '[*] [:contributor/name "bob"])
+(d/pull @sow-conn '[*] [:contributor/name "Bob"])
 
-;; change bob's name to bobby
-(d/transact conn [{:db/id [:contributor/name "bob"] :contributor/name "bobby"}])
+;; Change Bob's name to Bobby
+(d/transact sow-conn [{:db/id [:contributor/name "Bob"] :contributor/name "Bobby"}])
 
-;; check it
-(d/q find-name-email @conn)
+;; Check it
+(d/q find-name-email @sow-conn)
 
-(d/pull @conn '[*] [:contributor/name "bobby"])
+(d/pull @sow-conn '[*] [:contributor/name "Bobby"])
 
-;; bob is not related anymore as index
-(d/pull @conn '[*] [:contributor/name "bob"])
-;; will give an exception
+;; Bob is not related anymore as index and throws an exception when using it as a lookup ref
+(try (d/pull @sow-conn '[*] [:contributor/name "Bob"])
+     (catch ExceptionInfo e
+       (ex-message e)))
 
-;; create a repository, with refs from uniques, and an ident as enum
-(d/transact conn [{:repository/name "top secret"
-                   :repository/public false
-                   :repository/contributors [[:contributor/name "bobby"] [:contributor/name "alice"]]
-                   :repository/tags :language/clojure}])
+;; Create a repository, with refs from uniques, and an ident as enum
+(d/transact sow-conn [{:repository/name "top secret"
+                       :repository/public false
+                       :repository/contributors [[:contributor/name "Bobby"] [:contributor/name "Alice"]]
+                       :repository/tags :language/clojure}])
 
-;; let's search with pull inside the query
-(def find-repositories '[:find (pull ?e [*]) :where [?e :repository/name ?n]])
+;; Let's search with a pull-expression inside the query
+(def find-repositories '[:find (pull ?e [*])
+                         :where [?e :repository/name ?n]])
 
-;; looks good
-(d/q find-repositories @conn)
+;; Looks good
+(d/q find-repositories @sow-conn)
 
-;; let's go further and fetch the related contributor data as well
-(def find-repositories-with-contributors '[:find (pull ?e [* {:repository/contributors [*] :repository/tags [*]}]) :where [?e :repository/name ?n]])
+;; Let's go further and fetch the related contributor data as well
+(def find-repositories-with-contributors '[:find (pull ?e [* {:repository/contributors [*] :repository/tags [*]}])
+                                           :where [?e :repository/name ?n]])
 
-(d/q find-repositories-with-contributors @conn)
+(d/q find-repositories-with-contributors @sow-conn)
 
-;; the schema is part of the index, so we can query them too.
+;; The schema is part of the index, so we can query the schema-entities too.
 ;; Let's find all attribute names and their description.
-(d/q '[:find ?a ?d :where [?e :db/ident ?a] [?e :db/doc ?d]] @conn)
+(d/q '[:find ?a ?d :where [?e :db/ident ?a] [?e :db/doc ?d]] @sow-conn)
 
-;; cleanup the database
-(d/delete-database cfg)
+;; Cleanup the database before leaving
+(d/delete-database sow-config)
 
-;; Schema On Read
+;; ## Schema On Read
 
-;; let's create another database that can hold any arbitrary data
+;; Let's create another database that can hold any arbitrary data
+(def sor-config {:store {:backend :mem
+                         :id "schemaless"}
+                 :schema-flexibility :read})
 
-(def schemaless-cfg {:store {:backend :mem
-                             :id "schemaless"}
-                     :schema-flexibility :read})
+(when (d/database-exists? sor-config)
+  (d/delete-database sor-config))
 
-(when (d/database-exists? schemaless-cfg)
-  (d/delete-database schemaless-cfg))
+(d/create-database sor-config)
 
-(d/create-database schemaless-cfg)
+(def sor-conn (d/connect sor-config))
 
-(def conn (d/connect schemaless-cfg))
+;; Now we can go wild and transact anything
+(d/transact sor-conn [{:any "thing"}])
 
-;; now we can go wild and transact anything
-(d/transact conn [{:any "thing"}])
+;; Use a simple query on this data
+(d/q '[:find ?v :where [_ :any ?v]] @sor-conn)
 
-;; use simple query on this data
-(d/q '[:find ?v :where [_ :any ?v]] @conn)
+;; Be aware: Although there is no schema, you should tell the database if some attributes can have specific cardinality or indices.
+;; You may add that as schema transactions like before even later. That means you can first play around with your data and database
+;; and later tighten the schema.
+(d/transact sor-conn [{:db/ident :any :db/cardinality :db.cardinality/many}])
 
-;; be aware: although there is no schema, you should tell the database if some
-;; attributes can have specific cardinality or indices.
-;; You may add that as schema transactions like before
-(d/transact conn [{:db/ident :any :db/cardinality :db.cardinality/many}])
+;; Let's add more data to the first any entity
+(def any-eid (d/q '[:find ?e . :where [?e :any "thing"]] @sor-conn))
+(d/transact sor-conn [{:db/id any-eid :any "thing else"}])
 
-;; let's add more data to the first any entity
-(def any-eid (d/q '[:find ?e . :where [?e :any "thing"]] @conn))
-(d/transact conn [{:db/id any-eid :any "thing else"}])
-
-(d/q '[:find ?v :where [_ :any ?v]] @conn)
+(do (Thread/sleep 500)
+    (d/q '[:find ?v :where [_ :any ?v]] @sor-conn))
