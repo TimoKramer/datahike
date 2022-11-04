@@ -1,3 +1,4 @@
+;; # Datahike Store
 (ns datahike.notebooks.store
   (:require [datahike.api :as d]))
 
@@ -7,7 +8,7 @@
 
 (def query '[:find ?n :where [?e :name ?n]])
 
-;; let's cleanup, create, and connect all in one
+;; Let's cleanup, create, and connect all in one
 (defn cleanup-and-create-conn [cfg]
   (d/delete-database cfg)
   (d/create-database cfg)
@@ -19,7 +20,7 @@
   (d/transact conn [{:name name}])
   (d/q query @conn))
 
-;; first let's have a look at the memory store which uses an atom internally to store data
+;; First let's have a look at the memory store which uses an atom internally to store data
 ;; only a simple identifier is needed, we use
 (def mem-cfg {:store {:backend :mem :id "mem-example"}})
 
