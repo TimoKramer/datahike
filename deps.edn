@@ -30,7 +30,8 @@
                               org.clojure/tools.cli       {:mvn/version "1.0.206"}
                               incanter/incanter-core      {:mvn/version "1.9.3"}
                               incanter/incanter-charts    {:mvn/version "1.9.3"}
-                              hashp/hashp {:mvn/version "0.2.2"}}
+                              io.github.nextjournal/clerk {:mvn/version "0.11.603"}
+                              hashp/hashp                 {:mvn/version "0.2.2"}}
                  :main-opts ["-e" "(require 'hashp.core)"]}
 
            :test {:extra-paths ["test"]

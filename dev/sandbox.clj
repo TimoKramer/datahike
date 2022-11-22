@@ -80,3 +80,19 @@
                       :where [?e1 :name ?v1] [?e2 :name ?v2]]
              :args [@conn]})
        nil)))
+
+;; Clerk drafts
+
+(comment
+  (require '[nextjournal.clerk :as clerk])
+
+  (clerk/serve! {:browse? true})
+
+  (clerk/clear-cache!)
+
+  (clerk/show! "notebooks/crash_course.clj")
+  (clerk/show! "notebooks/schema.clj")
+  (clerk/show! "notebooks/store.clj")
+  ;; there are race conditions somehwere when creating and deleting many dbs
+  (clerk/show! "notebooks/time_travel.clj")
+  (clerk/show! "notebooks/time_variance.clj"))
