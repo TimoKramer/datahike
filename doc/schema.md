@@ -16,9 +16,6 @@ category.
 Datahike supports both approaches which can be chosen at creation time but can
 not be changed afterwards.
 
-Have a look at the `core`-namespace in the `examples/store-intro` folder for
-example configuration and transactions.
-
 ## Schema-on-read
 
 By inheriting most of the code from

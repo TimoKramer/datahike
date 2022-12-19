@@ -91,8 +91,8 @@
 
   (clerk/clear-cache!)
 
-  (clerk/show! "notebooks/crash_course.clj")
-  (clerk/show! "notebooks/schema.clj")
+  (clerk/show! "notebooks/1_basics.clj")
+  (clerk/show! "notebooks/2_schema.clj")
   (clerk/show! "notebooks/store.clj")
   ;; there are race conditions somehwere when creating and deleting many dbs
   (clerk/show! "notebooks/time_travel.clj")

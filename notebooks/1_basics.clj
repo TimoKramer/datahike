@@ -1,16 +1,20 @@
-;; # Datahike Crash Course
-(ns datahike.notebooks.crash-course
+;; # 1 - Datahike Basics
+;; ###### Best viewed with [Clerk](https://github.com/nextjournal/clerk)
+;; ## Require Datahike API namespace
+(ns datahike.notebooks.1-basics
   (:require [datahike.api :as d]))
 
+;; ## Specify a configuration
+;; Per default configuration we enforce a strict schema and keep all historical data.
 (def cfg {:store {:backend :file
                   :path "/tmp/example"}})
 
 ;; ## Create a database
-;; Per default configuration we enforce a strict
-;; schema and keep all historical data.
+;; First we check if one is already existent and delete it if so
 (when (d/database-exists? cfg)
   (d/delete-database cfg))
 
+;; Then we create a database with our configuration from above
 (d/create-database cfg)
 
 ;; ## Connect to database
@@ -19,9 +23,8 @@
 (:config @conn)
 
 ;; ## Transact data
-;; The first transaction will be the schema we are using.
-;; You may also add this within database creation by adding :initial-tx
-;; to the configuration.
+;; The first transaction will be the schema we are using. You may also add this
+;; within database creation by adding :initial-tx to the configuration.
 (d/transact conn [{:db/ident :name
                    :db/valueType :db.type/string
                    :db/cardinality :db.cardinality/one}
@@ -45,6 +48,7 @@
 (:tx-data tx-report)
 
 ;; ## Query the database.
+;; We are querying for the entity-ID the name and the age of all available entities.
 (d/q '[:find ?entity-id ?name ?age
        :where
        [?entity-id :name ?name]
@@ -96,3 +100,9 @@
 
 ;; Delete the database if it is not needed any more.
 (d/delete-database cfg)
+
+(comment
+  (require '[nextjournal.clerk :as clerk])
+  (clerk/serve! {:browse? false})
+  (clerk/show! "notebooks/1_basics.clj")
+  (clerk/clear-cache!))

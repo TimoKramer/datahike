@@ -1,17 +1,18 @@
-;; # Datahike Schema
-(ns datahike.notebooks.schema
+;; # 2 - Datahike Schema
+;; ###### Best viewed with [Clerk](https://github.com/nextjournal/clerk)
+(ns datahike.notebooks.2-schema
   (:require [datahike.api :as d]
             [nextjournal.clerk :as clerk])
   (:import [clojure.lang ExceptionInfo]))
 
 ;; The first example assumes you know your data model in advance,
-;; so you we can use a schema-on-write approach in contrast to a schema-on-read
+;; so we can use a schema-on-write approach in contrast to a schema-on-read
 ;; approach. Have a look at the documentation in `/doc/schema.md` for more
 ;; information on the different types of schema flexibility. After the first
 ;; example we will have a short schema-on-read example.
 
 ;; ## Schema-on-Write
-;; Define data model
+;; Here we are defining our data model
 (def schema [{:db/ident :contributor/name
               :db/valueType :db.type/string
               :db/unique :db.unique/identity
@@ -43,7 +44,7 @@
              {:db/ident :language/clojure}
              {:db/ident :language/rust}])
 
-;; Define (schema-on-write) configuration
+;; Define schema-on-write configuration
 (def sow-config {:store {:backend :mem}
                  :id "schema-intro"
                  :schema-flexibility :write})
@@ -166,5 +167,13 @@
 (def any-eid (d/q '[:find ?e . :where [?e :any "thing"]] @sor-conn))
 (d/transact sor-conn [{:db/id any-eid :any "thing else"}])
 
+;; [Clerk](https://github.com/nextjournal/clerk) needs a sleep here because of concurrency.
 (do (Thread/sleep 500)
     (d/q '[:find ?v :where [_ :any ?v]] @sor-conn))
+
+^{::clerk/visibility {:code :hide}}
+(comment
+  (require '[nextjournal.clerk :as clerk])
+  (clerk/serve! {:browse? false})
+  (clerk/show! "notebooks/2_schema.clj")
+  (clerk/clear-cache!))
