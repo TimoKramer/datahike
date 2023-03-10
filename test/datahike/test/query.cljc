@@ -1,81 +1,77 @@
 (ns datahike.test.query
   (:require
-    #?(:cljs [cljs.test    :as t :refer-macros [is are deftest testing]]
-       :clj  [clojure.test :as t :refer        [is are deftest testing]])
-    [datahike.core :as d]
-    [datahike.query :as dq]
-    [datahike.db :as db]
-    [datahike.test.core :as tdc])
+   #?(:cljs [cljs.test    :as t :refer-macros [is deftest testing]]
+      :clj  [clojure.test :as t :refer        [is deftest testing]])
+   [datahike.core :as d]
+   [datahike.api :as da]
+   [datahike.query :as dq])
   #?(:clj
      (:import [clojure.lang ExceptionInfo])))
 
 (deftest test-joins
   (let [db (-> (d/empty-db)
-               (d/db-with [ {:db/id 1, :name  "Ivan", :age   15}
-                            {:db/id 2, :name  "Petr", :age   37}
-                            {:db/id 3, :name  "Ivan", :age   37}
-                            {:db/id 4, :age 15}]))]
+               (d/db-with [{:db/id 1, :name  "Ivan", :age   15}
+                           {:db/id 2, :name  "Petr", :age   37}
+                           {:db/id 3, :name  "Ivan", :age   37}
+                           {:db/id 4, :age 15}]))]
     (is (= (d/q '[:find ?e
                   :where [?e :name]] db)
            #{[1] [2] [3]}))
     (is (= (d/q '[:find  ?e ?v
                   :where [?e :name "Ivan"]
-                         [?e :age ?v]] db)
+                  [?e :age ?v]] db)
            #{[1 15] [3 37]}))
     (is (= (d/q '[:find  ?e1 ?e2
                   :where [?e1 :name ?n]
-                         [?e2 :name ?n]] db)
+                  [?e2 :name ?n]] db)
            #{[1 1] [2 2] [3 3] [1 3] [3 1]}))
     (is (= (d/q '[:find  ?e ?e2 ?n
                   :where [?e :name "Ivan"]
-                         [?e :age ?a]
-                         [?e2 :age ?a]
-                         [?e2 :name ?n]] db)
+                  [?e :age ?a]
+                  [?e2 :age ?a]
+                  [?e2 :name ?n]] db)
            #{[1 1 "Ivan"]
              [3 3 "Ivan"]
              [3 2 "Petr"]}))))
 
-
 (deftest test-q-many
   (let [db (-> (d/empty-db {:aka {:db/cardinality :db.cardinality/many}})
-               (d/db-with [ [:db/add 1 :name "Ivan"]
-                            [:db/add 1 :aka  "ivolga"]
-                            [:db/add 1 :aka  "pi"]
-                            [:db/add 2 :name "Petr"]
-                            [:db/add 2 :aka  "porosenok"]
-                            [:db/add 2 :aka  "pi"]]))]
+               (d/db-with [[:db/add 1 :name "Ivan"]
+                           [:db/add 1 :aka  "ivolga"]
+                           [:db/add 1 :aka  "pi"]
+                           [:db/add 2 :name "Petr"]
+                           [:db/add 2 :aka  "porosenok"]
+                           [:db/add 2 :aka  "pi"]]))]
     (is (= (d/q '[:find  ?n1 ?n2
                   :where [?e1 :aka ?x]
-                         [?e2 :aka ?x]
-                         [?e1 :name ?n1]
-                         [?e2 :name ?n2]] db)
+                  [?e2 :aka ?x]
+                  [?e1 :name ?n1]
+                  [?e2 :name ?n2]] db)
            #{["Ivan" "Ivan"]
              ["Petr" "Petr"]
              ["Ivan" "Petr"]
              ["Petr" "Ivan"]}))))
 
-
 (deftest test-q-coll
-  (let [db [ [1 :name "Ivan"]
-             [1 :age  19]
-             [1 :aka  "dragon_killer_94"]
-             [1 :aka  "-=autobot=-"]]]
-    (is (= (d/q '[ :find  ?n ?a
-                   :where [?e :aka "dragon_killer_94"]
-                          [?e :name ?n]
-                          [?e :age  ?a]] db)
+  (let [db [[1 :name "Ivan"]
+            [1 :age  19]
+            [1 :aka  "dragon_killer_94"]
+            [1 :aka  "-=autobot=-"]]]
+    (is (= (d/q '[:find  ?n ?a
+                  :where [?e :aka "dragon_killer_94"]
+                  [?e :name ?n]
+                  [?e :age  ?a]] db)
            #{["Ivan" 19]})))
 
   (testing "Query over long tuples"
-    (let [db [ [1 :name "Ivan" 945 :db/add]
-               [1 :age  39     999 :db/retract]]]
-      (is (= (d/q '[ :find  ?e ?v
-                     :where [?e :name ?v]] db)
+    (let [db [[1 :name "Ivan" 945 :db/add]
+              [1 :age  39     999 :db/retract]]]
+      (is (= (d/q '[:find  ?e ?v
+                    :where [?e :name ?v]] db)
              #{[1 "Ivan"]}))
-      (is (= (d/q '[ :find  ?e ?a ?v ?t
-                     :where [?e ?a ?v ?t :db/retract]] db)
+      (is (= (d/q '[:find  ?e ?a ?v ?t
+                    :where [?e ?a ?v ?t :db/retract]] db)
              #{[1 :age 39 999]})))))
-
 
 (deftest test-q-in
   (let [db (-> (d/empty-db)
@@ -101,7 +97,7 @@
       (is (= (d/q '[:find  ?e ?email
                     :in    $ $b
                     :where [?e :name ?n]
-                           [$b ?n ?email]]
+                    [$b ?n ?email]]
                   db
                   [["Ivan" "ivan@mail.ru"]
                    ["Petr" "petr@gmail.com"]])
@@ -117,9 +113,9 @@
 
 (deftest test-bindings
   (let [db (-> (d/empty-db)
-             (d/db-with [{:db/id 1, :name "Ivan", :age 15}
-                         {:db/id 2, :name "Petr", :age 37}
-                         {:db/id 3, :name "Ivan", :age 37}]))]
+               (d/db-with [{:db/id 1, :name "Ivan", :age 15}
+                           {:db/id 2, :name "Petr", :age 37}
+                           {:db/id 3, :name "Ivan", :age 37}]))]
     (testing "Relation binding"
       (is (= (d/q '[:find  ?e ?email
                     :in    $ [[?n ?email]]
@@ -135,7 +131,7 @@
       (is (= (d/q '[:find  ?e
                     :in    $ [?name ?age]
                     :where [?e :name ?name]
-                           [?e :age ?age]]
+                    [?e :age ?age]]
                   db ["Ivan" 37])
              #{[3]})))
 
@@ -150,16 +146,16 @@
       (is (= (d/q '[:find ?id
                     :in $ [?id ...]
                     :where [?id :age _]]
-               [[1 :name "Ivan"]
-                [2 :name "Petr"]]
-               [])
+                  [[1 :name "Ivan"]
+                   [2 :name "Petr"]]
+                  [])
              #{}))
       (is (= (d/q '[:find ?id
                     :in $ [[?id]]
                     :where [?id :age _]]
-               [[1 :name "Ivan"]
-                [2 :name "Petr"]]
-               [])
+                  [[1 :name "Ivan"]
+                   [2 :name "Petr"]]
+                  [])
              #{})))
 
     (testing "Placeholders"
@@ -174,13 +170,11 @@
 
     (testing "Error reporting"
       (is (thrown-with-msg? ExceptionInfo #"Cannot bind value :a to tuple \[\?a \?b\]"
-            (d/q '[:find ?a ?b :in [?a ?b]] :a)))
+                            (d/q '[:find ?a ?b :in [?a ?b]] :a)))
       (is (thrown-with-msg? ExceptionInfo #"Cannot bind value :a to collection \[\?a \.\.\.\]"
-            (d/q '[:find ?a :in [?a ...]] :a)))
+                            (d/q '[:find ?a :in [?a ...]] :a)))
       (is (thrown-with-msg? ExceptionInfo #"Not enough elements in a collection \[:a\] to bind tuple \[\?a \?b\]"
-            (d/q '[:find ?a ?b :in [?a ?b]] [:a]))))))
-
-
+                            (d/q '[:find ?a ?b :in [?a ?b]] [:a]))))))
 
 (deftest test-nested-bindings
   (is (= (d/q '[:find  ?k ?v
@@ -192,7 +186,7 @@
   (is (= (d/q '[:find  ?k ?min ?max
                 :in    [[?k ?v] ...] ?minmax
                 :where [(?minmax ?v) [?min ?max]]
-                       [(> ?max ?min)]]
+                [(> ?max ?min)]]
               {:a [1 2 3 4]
                :b [5 6 7]
                :c [3]}
@@ -202,7 +196,7 @@
   (is (= (d/q '[:find  ?k ?x
                 :in    [[?k [?min ?max]] ...] ?range
                 :where [(?range ?min ?max) [?x ...]]
-                       [(even? ?x)]]
+                [(even? ?x)]]
               {:a [1 7]
                :b [2 4]}
               range)
@@ -214,28 +208,35 @@
                (d/db-with [{:db/id 1, :name  "Alice", :age   15}
                            {:db/id 2, :name  "Bob", :age   37}
                            {:db/id 3, :name  "Charlie", :age   37}]))]
-    (is (= (count (d/q {:query '[:find ?e :where [?e :name _]]
-                        :args [db]}))
-           3))
-    (is (= (count (d/q {:query '[:find ?e :where [?e :name _]]
-                        :args [db]
-                        :offset 1
-                        :limit 1}))
-           1))
-    (is (= (count (d/q {:query '[:find ?e :where [?e :name _]]
-                        :args [db]
-                        :limit 2}))
-           2))
-    (is (= (count  (d/q {:query '[:find ?e :where [?e :name _]]
-                         :args [db]
-                         :offset 1
-                         :limit 2}))
-           2))
-    (is (= (count  (d/q {:query '[:find ?e :where [?e :name _]]
-                         :args [db]
-                         :offset 2
-                         :limit 2}))
-           1))
+    (is (= 3 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]
+                          :limit -1}))))
+    (is (= 3 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]}))))
+    (is (= 3 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]
+                          :limit nil}))))
+    (is (= 3 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]
+                          :offset -1}))))
+    (is (= 3 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]
+                          :offset nil}))))
+    (is (= 1 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]
+                          :offset 1
+                          :limit 1}))))
+    (is (= 2 (count (d/q {:query '[:find ?e :where [?e :name _]]
+                          :args [db]
+                          :limit 2}))))
+    (is (= 2 (count  (d/q {:query '[:find ?e :where [?e :name _]]
+                           :args [db]
+                           :offset 1
+                           :limit 2}))))
+    (is (= 1 (count  (d/q {:query '[:find ?e :where [?e :name _]]
+                           :args [db]
+                           :offset 2
+                           :limit 2}))))
     (is (not (= (d/q {:query '[:find ?e :where [?e :name _]]
                       :args [db]
                       :limit 2})
@@ -244,16 +245,16 @@
                       :offset 1
                       :limit 2}))))
     (is (= (d/q {:query '[:find ?e :where [?e :name _]]
-                         :args [db]
+                 :args [db]
                  :offset 4})
            #{}))
     (is (= (d/q {:query '[:find ?e :where [?e :name _]]
-                         :args [db]
+                 :args [db]
                  :offset 10
                  :limit 5})
            #{}))
     (is (= (d/q {:query '[:find ?e :where [?e :name _]]
-                         :args [db]
+                 :args [db]
                  :offset 1
                  :limit 0})
            #{}))))
@@ -263,21 +264,29 @@
                (d/db-with [{:db/id 1, :name  "Alice", :age   15}
                            {:db/id 2, :name  "Bob", :age   37}
                            {:db/id 3, :name  "Charlie", :age   37}]))]
-      (testing "returns map"
-          (is (map? (first (d/q {:query '[:find ?e :keys name :where [?e :name _]]
-                                 :args [db]})))))
-      (testing "returns set without return-map"
-          (is (= '#{["Charlie"] ["Alice"] ["Bob"]}
-                 (d/q {:query '[:find ?name :where [_ :name ?name]]
-                       :args [db]}))))
-      (testing "returns map with key return-map"
-          (is (= '[{:foo 3} {:foo 2} {:foo 1}]
-                 (d/q {:query '[:find ?e :keys foo :where [?e :name _]]
-                       :args [db]}))))
-      (testing "returns map with string return-map"
-          (is (= '[{"foo" "Charlie"} {"foo" "Alice"} {"foo" "Bob"}]
-                 (d/q {:query '[:find ?name :strs foo :where [?e :name ?name]]
-                       :args [db]}))))))
+    (testing "returns map"
+      (is (map? (first (d/q {:query '[:find ?e :keys name :where [?e :name _]]
+                             :args [db]})))))
+    (testing "returns set without return-map"
+      (is (= #{["Charlie"] ["Alice"] ["Bob"]}
+             (d/q {:query '[:find ?name :where [_ :name ?name]]
+                   :args [db]}))))
+    (testing "returns map with key return-map"
+      (is (= [{:foo 3} {:foo 2} {:foo 1}]
+             (d/q {:query '[:find ?e :keys foo :where [?e :name _]]
+                   :args [db]}))))
+    (testing "returns map with string return-map"
+      (is (= [{"foo" "Charlie"} {"foo" "Alice"} {"foo" "Bob"}]
+             (d/q {:query '[:find ?name :strs foo :where [?e :name ?name]]
+                   :args [db]}))))
+    (testing "return map with keys using multiple find vars"
+      (is (= #{["Bob" {:age 37 :db/id 2}]
+               ["Charlie" {:age 37 :db/id 3}]
+               ["Alice" {:age 15 :db/id 1}]}
+             (into #{} (d/q {:find '[?name (pull ?e ?p)]
+                             :args [db '[:age :db/id]]
+                             :in '[$ ?p]
+                             :where '[[?e :name ?name]]})))))))
 
 (deftest test-memoized-parse-query
   (testing "no map return"
@@ -340,5 +349,60 @@
                                         [3 31 "Ivan"]
                                         [3 21 "Petr"]})))))
 
-#_(require 'datahike.test.query :reload)
-#_(clojure.test/test-ns 'datahike.test.query)
+#_(deftest test-clause-order-invariance                     ;; TODO: this is what should happen after rewirite of query engine
+    (let [db (-> (d/empty-db)
+                 (d/db-with [{:db/id 1, :name  "Ivan", :age   15}
+                             {:db/id 2, :name  "Petr", :age   37}
+                             {:db/id 3, :name  "Ivan", :age   37}
+                             {:db/id 4, :age 15}]))]
+      (testing "Clause order does not matter for predicates"
+        (is (= (d/q {:query '{:find [?e]
+                              :where [[?e :age ?age]
+                                      [(= ?age 37)]]}
+                     :args [db]})
+               #{[2] [3]}))
+        (is (= (d/q {:query '{:find [?e]
+                              :where [[(= ?age 37)]
+                                      [?e :age ?age]]}
+                     :args [db]})
+               #{[2] [3]})))))
+
+(deftest test-clause-order
+  (let [db (-> (d/empty-db)
+               (d/db-with [{:db/id 1, :name  "Ivan", :age   15}
+                           {:db/id 2, :name  "Petr", :age   37}
+                           {:db/id 3, :name  "Ivan", :age   37}
+                           {:db/id 4, :age 15}]))]
+    (testing "Predicate clause before variable binding throws exception"
+      (is (= (d/q {:query '{:find [?e]
+                            :where [[?e :age ?age]
+                                    [(= ?age 37)]]}
+                   :args [db]})
+             #{[2] [3]}))
+      (is (thrown-msg? "Insufficient bindings: #{?age} not bound in [(= ?age 37)]"
+                       (d/q {:query '{:find [?e]
+                                      :where [[(= ?age 37)]
+                                              [?e :age ?age]]}
+                             :args [db]}))))))
+
+(deftest test-zeros-in-pattern
+  (let [cfg {:store {:backend :mem
+                     :id "sandbox"}
+             :index :datahike.index/hitchhiker-tree
+             :keep-history? true
+             :schema-flexibility :write
+             :attribute-refs? false}
+        conn (do
+               (da/delete-database cfg)
+               (da/create-database cfg)
+               (da/connect cfg))]
+    (da/transact conn [{:db/ident :version/id
+                        :db/valueType :db.type/long
+                        :db/cardinality :db.cardinality/one
+                        :db/unique :db.unique/identity}
+                       {:version/id 0}
+                       {:version/id 1}])
+    (is (= 1
+           (count (da/q '[:find ?t :in $ :where
+                          [?t :version/id 0]]
+                        @conn))))))

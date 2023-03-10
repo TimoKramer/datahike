@@ -5,7 +5,8 @@
    [datahike.api :as d]
    [datahike.schema :as ds]
    [datahike.db :as dd]
-   [datahike.test.core :as tdc])
+   [datahike.datom :as da]
+   [datahike.constants :as c])
   (:import [java.lang System]))
 
 #?(:clj
@@ -15,6 +16,11 @@
 (def name-schema {:db/ident       :name
                   :db/valueType   :db.type/string
                   :db/cardinality :db.cardinality/one})
+
+(def personal-id-schema {:db/ident :id
+                         :db/valueType :db.type/long
+                         :db/unique :db.unique/identity
+                         :db/cardinality :db.cardinality/many})
 
 (def find-name-q '[:find ?n
                    :where [_ :name ?n]])
@@ -33,7 +39,7 @@
         db (d/db conn)
         tx [{:name "Alice"}]]
 
-    (is (= {:db/ident {:db/unique :db.unique/identity}} (dd/-schema db)))
+    (is (= c/non-ref-implicit-schema (dd/-schema db)))
 
     (testing "transact without schema present"
       (is (thrown-msg?
@@ -44,11 +50,11 @@
       (d/transact conn [name-schema])
       (is (= #{[:name :db.type/string :db.cardinality/one]}
              (d/q find-schema-q (d/db conn))))
-      (is (= {:db/ident #:db{:unique :db.unique/identity}
-              :name     #:db{:ident       :name
-                             :valueType   :db.type/string
-                             :cardinality :db.cardinality/one}
-              1         :name}
+      (is (= (merge c/non-ref-implicit-schema
+                    {:name     #:db{:ident       :name
+                                    :valueType   :db.type/string
+                                    :cardinality :db.cardinality/one}
+                     1         :name})
              (dd/-schema (d/db conn)))))
 
     (testing "transacting data with schema present"
@@ -83,7 +89,7 @@
 
     (testing "insert schema with incorrect value type"
       (is (thrown-msg?
-           "Bad entity value :string at [:db/add 3 :db/valueType :string], value does not match schema definition. Must be conform to: #{:db.type/number :db.type/instant :db.type/boolean :db.type/uuid :db.type/value :db.type/string :db.type/keyword :db.type/ref :db.type/bigdec :db.type/float :db.type/bigint :db.type/double :db.type/long :db.type/symbol}"
+           "Bad entity value :string at [:db/add 3 :db/valueType :string], value does not match schema definition. Must be conform to: #{:db.type/number :db.type/unique :db.type/instant :db.type/cardinality :db.type/tuple :db.type/boolean :db.type/bytes :db.type/uuid :db.type/value :db.type/string :db.type/keyword :db.type/ref :db.type/bigdec :db.type.install/attribute :db.type/float :db.type/bigint :db.type/double :db.type/long :db.type/valueType :db.type/symbol}"
            (d/transact conn [{:db/ident       :phone
                               :db/cardinality :db.cardinality/one
                               :db/valueType   :string}]))))))
@@ -96,11 +102,11 @@
 
     (testing "schema existence"
       (let [db (d/db conn)]
-        (is (= {:db/ident {:db/unique :db.unique/identity}
-                :name     #:db{:ident       :name
-                               :valueType   :db.type/string
-                               :cardinality :db.cardinality/one}
-                1         :name}
+        (is (= (merge c/non-ref-implicit-schema
+                      {:name     #:db{:ident       :name
+                                      :valueType   :db.type/string
+                                      :cardinality :db.cardinality/one}
+                       1         :name})
                (dd/-schema db)))
         (is (= #{[:name :db.type/string :db.cardinality/one]} (d/q find-schema-q db)))))
 
@@ -113,15 +119,15 @@
                          :db/valueType   :db.type/long
                          :db/cardinality :db.cardinality/one}])
       (let [db (d/db conn)]
-        (is (= {:db/ident {:db/unique :db.unique/identity}
-                :name     #:db{:ident       :name
-                               :valueType   :db.type/string
-                               :cardinality :db.cardinality/one}
-                1         :name
-                :age      #:db{:ident       :age
-                               :valueType   :db.type/long
-                               :cardinality :db.cardinality/one}
-                3         :age}
+        (is (= (merge c/non-ref-implicit-schema
+                      {:name     #:db{:ident       :name
+                                      :valueType   :db.type/string
+                                      :cardinality :db.cardinality/one}
+                       1         :name
+                       :age      #:db{:ident       :age
+                                      :valueType   :db.type/long
+                                      :cardinality :db.cardinality/one}
+                       3         :age})
                (dd/-schema db)))
         (is (= #{[:name :db.type/string :db.cardinality/one] [:age :db.type/long :db.cardinality/one]}
                (d/q find-schema-q db)))))
@@ -134,15 +140,15 @@
       (d/transact conn [{:db/ident :name
                          :db/cardinality :db.cardinality/many}])
       (let [db (d/db conn)]
-        (is (= {:db/ident {:db/unique :db.unique/identity}
-                :name     #:db{:ident       :name
-                               :valueType   :db.type/string
-                               :cardinality :db.cardinality/many}
-                1         :name
-                :age      #:db{:ident       :age
-                               :valueType   :db.type/long
-                               :cardinality :db.cardinality/one}
-                3         :age}
+        (is (= (merge c/non-ref-implicit-schema
+                      {:name     #:db{:ident       :name
+                                      :valueType   :db.type/string
+                                      :cardinality :db.cardinality/many}
+                       1         :name
+                       :age      #:db{:ident       :age
+                                      :valueType   :db.type/long
+                                      :cardinality :db.cardinality/one}
+                       3         :age})
                (dd/-schema db)))
         (is (= #{[:name :db.type/string :db.cardinality/many] [:age :db.type/long :db.cardinality/one]}
                (d/q find-schema-q db)))))))
@@ -264,7 +270,6 @@
            (d/transact conn [{:db/id [:db/ident :owner]
                               :db/cardinality :db.cardinality/many}]))))))
 
-
 (deftest test-schema-persistence
   (testing "test file persistence"
     (let [os (System/getProperty "os.name")
@@ -325,3 +330,57 @@
         (d/transact conn [{:message "important" :tag :important} {:message "archive" :tag [:important :archive]}])
         (is (= #{["important" :important] ["archive" :important] ["archive" :archive]}
                (d/q '[:find ?m ?t :where [?e :message ?m] [?e :tag ?te] [?te :db/ident ?t]] (d/db conn))))))))
+
+(deftest test-remove-schema
+  (let [cfg "datahike:mem://test-remove-schema"
+        _ (d/delete-database cfg)
+        _ (d/create-database cfg)
+        conn (d/connect cfg)
+        db (d/db conn)]
+    (testing "non existing schema should throw exception"
+      (is (thrown-msg? "Schema with attribute :name does not exist"
+                       (dd/remove-schema db (da/datom 1 :db/ident :name)))))
+    (testing "when upserting a non existing schema, it should not throw an exception"
+      (is (d/transact conn [name-schema])))))
+
+(deftest test-update-schema
+  (let [cfg "datahike:mem://test-update-schema"
+        _ (d/delete-database cfg)
+        _ (d/create-database cfg :initial-schema [name-schema personal-id-schema])
+        conn (d/connect cfg)
+        db (d/db conn)
+
+        update-name-attr (fn [attr new-value] (d/transact conn {:tx-data [(assoc name-schema attr new-value)]}))]
+    (testing "Allow to update doc"
+      (is (update-name-attr :db/doc "Some doc") "It should be allowed to add :db/doc.")
+      (is (update-name-attr :db/doc "Some new doc") "It should be allowed to update :db/doc.")
+      (is (d/transact conn {:tx-data [[:db/retract :name :db/doc]]}) "It should be allowed to retract :db/doc."))
+
+    (testing "Allow to toggle noHistory"
+      (is (update-name-attr :db/noHistory true) "It should be allowed to enable :db/noHistory.")
+      (is (update-name-attr :db/noHistory false) "It should be allowed to disable :db/noHistory."))
+
+    (testing "Allow to toggle isComponent"
+      (is (update-name-attr :db/isComponent true) "It should be allowed to enable :db/isComponent.")
+      (is (update-name-attr :db/isComponent false) "It should be allowed to disable :db/isComponent."))
+
+    (testing "Allow to update :db/unique only if it already exists"
+      (is (thrown-msg? "Update not supported for these schema attributes"
+                       (d/transact conn {:tx-data [(assoc name-schema :db/unique :db.unique/value)]}))
+          "It shouldn't be allowed to update :db/unique if it doesn't exist already.")
+      (is (d/transact conn {:tx-data [(assoc personal-id-schema :db/unique :db.unique/value)]})
+          "It should be allowed to update :db/unique if it exists already."))
+
+    (testing "Allow to update :db/cardinality "
+      (testing "if :db/unique is not set"
+        (is (update-name-attr :db/cardinality :db.cardinality/many)
+            "It should be allowed to update :db/cardinality to :db.cardinality/many.")
+        (is (update-name-attr :db/cardinality :db.cardinality/one)
+            "It should be allowed to update :db/cardinality to :db.cardinality/one."))
+
+      (testing "if :db/unique is set"
+        (is (d/transact conn {:tx-data [(assoc personal-id-schema :db/cardinality :db.cardinality/one)]})
+            "It should be allowed to update :db/cardinality to :db.cardinality/one.")
+        (is (thrown-msg? "Update not supported for these schema attributes"
+                         (d/transact conn {:tx-data [(assoc personal-id-schema :db/cardinality :db.cardinality/many)]}))
+            "It shouldn't be allowed to update :db/cardinality to :db.cardinality/many")))))

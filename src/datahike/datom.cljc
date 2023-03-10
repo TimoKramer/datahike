@@ -1,7 +1,7 @@
-(ns datahike.datom
+(ns ^:no-doc datahike.datom
   (:require  [clojure.walk]
              [clojure.data]
-             [datahike.tools :refer [combine-hashes ]]
+             [datahike.tools :refer [combine-hashes]]
              [datahike.constants :refer [tx0]]))
 
 (declare hash-datom equiv-datom seq-datom nth-datom assoc-datom val-at-datom)
@@ -26,6 +26,10 @@
 
        ISeqable
        (-seq [d] (seq-datom d))
+
+       IFn
+       (-invoke [d k] (val-at-datom d k nil))
+       (-invoke [d k v] (val-at-datom d k v))
 
        ILookup
        (-lookup [d k] (val-at-datom d k nil))
@@ -69,12 +73,16 @@
        (nth [this i] (nth-datom this i))
        (nth [this i not-found] (nth-datom this i not-found))
 
+       clojure.lang.IFn
+       (invoke [d k] (val-at-datom d k nil))
+       (invoke [d k v] (val-at-datom d k v))
+
        clojure.lang.ILookup
        (valAt [d k] (val-at-datom d k nil))
        (valAt [d k nf] (val-at-datom d k nf))
 
        clojure.lang.Associative
-       (entryAt [d k] (some->> (val-at-datom d k nil) (clojure.lang.MapEntry k)))
+       (entryAt [d k] (some->> (val-at-datom d k nil) (clojure.lang.MapEntry. k)))
        (containsKey [e k] (#{:e :a :v :tx :added} k))
        (assoc [d k v] (assoc-datom d k v))]))
 
@@ -163,44 +171,41 @@
             res (num 0)]
        (if (not-empty comps)
          (recur
-           (next comps)
-           `(let [c# ~(first comps)]
-              (if (== 0 c#)
-                ~res
-                c#)))
+          (next comps)
+          `(let [c# ~(first comps)]
+             (if (== 0 c#)
+               ~res
+               c#)))
          res))))
-
 
 (defn cmp [o1 o2]
   (if (nil? o1) 0
-                (if (nil? o2) 0
-                              (compare o1 o2))))
+      (if (nil? o2) 0
+          (compare o1 o2))))
 
 ;; Slower cmp-* fns allows for datom fields to be nil.
 ;; Such datoms come from slice method where they are used as boundary markers.
 
 (defn cmp-datoms-eavt [^Datom d1, ^Datom d2]
   (combine-cmp
-    (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
-    (cmp (.-a d1) (.-a d2))
-    (cmp (.-v d1) (.-v d2))
-    (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
-
-
+   (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
+   (cmp (.-a d1) (.-a d2))
+   (cmp (.-v d1) (.-v d2))
+   (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
 
 (defn cmp-datoms-aevt [^Datom d1, ^Datom d2]
   (combine-cmp
-    (cmp (.-a d1) (.-a d2))
-    (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
-    (cmp (.-v d1) (.-v d2))
-    (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
+   (cmp (.-a d1) (.-a d2))
+   (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
+   (cmp (.-v d1) (.-v d2))
+   (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
 
 (defn cmp-datoms-avet [^Datom d1, ^Datom d2]
   (combine-cmp
-    (cmp (.-a d1) (.-a d2))
-    (cmp (.-v d1) (.-v d2))
-    (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
-    (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
+   (cmp (.-a d1) (.-a d2))
+   (cmp (.-v d1) (.-v d2))
+   (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
+   (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
 
 ;; fast versions without nil checks
 
@@ -215,24 +220,24 @@
 
 (defn cmp-datoms-eavt-quick [^Datom d1, ^Datom d2]
   (combine-cmp
-    (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
-    (cmp-attr-quick (.-a d1) (.-a d2))
-    (compare (.-v d1) (.-v d2))
-    (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
+   (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
+   (cmp-attr-quick (.-a d1) (.-a d2))
+   (compare (.-v d1) (.-v d2))
+   (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
 
 (defn cmp-datoms-aevt-quick [^Datom d1, ^Datom d2]
   (combine-cmp
-    (cmp-attr-quick (.-a d1) (.-a d2))
-    (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
-    (compare (.-v d1) (.-v d2))
-    (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
+   (cmp-attr-quick (.-a d1) (.-a d2))
+   (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
+   (compare (.-v d1) (.-v d2))
+   (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
 
 (defn cmp-datoms-avet-quick [^Datom d1, ^Datom d2]
   (combine-cmp
-    (cmp-attr-quick (.-a d1) (.-a d2))
-    (compare (.-v d1) (.-v d2))
-    (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
-    (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
+   (cmp-attr-quick (.-a d1) (.-a d2))
+   (compare (.-v d1) (.-v d2))
+   (#?(:clj Integer/compare :cljs -) (.-e d1) (.-e d2))
+   (#?(:clj Long/compare :cljs -) (datom-tx d1) (datom-tx d2))))
 
 (defn diff-sorted [a b cmp]
   (loop [only-a []
@@ -251,3 +256,11 @@
           (== diff 0) (recur only-a only-b (conj both first-a) (next a) (next b))
           (< diff 0) (recur (conj only-a first-a) only-b both (next a) b)
           (> diff 0) (recur only-a (conj only-b first-b) both a (next b)))))))
+
+(defn coll->datoms
+  "Converts a collection with elements of form [e a v t] into a collection of Datoms."
+  [coll]
+  (map
+   (fn [[e a v t]]
+     (datom e a v t))
+   coll))

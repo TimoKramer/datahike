@@ -2,7 +2,6 @@
 /bench/target
 /classes
 /checkouts
-pom.xml
 pom.xml.asc
 *.jar
 *.class
@@ -21,3 +20,11 @@ release.clj
 .#*
 /.gitold/COMMIT_EDITMSG
 .cpcache
+lsp/
+.calva/
+out/
+.clj-kondo
+.lsp
+/.cache
+/.settings
+.classpath
