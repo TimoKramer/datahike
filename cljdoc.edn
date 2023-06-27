@@ -1,0 +1,16 @@
+{:cljdoc.doc/tree
+ [["Readme" {:file "README.md"}]
+  ["Config" {:file "doc/config.md"}]
+  ["Schema" {:file "doc/schema.md"}]
+  ["Schema Migration" {:file "doc/schema-migration.md"}]
+  ["Contributing" {:file "doc/contributing.md"}]
+  ["Backend Development" {:file "doc/backend-development.md"}]
+  ["Datomic Differences" {:file "doc/datomic_differences.md"}]
+  ["Entity Spec" {:file "doc/entity_spec.md"}]
+  ["Logging- and Error Handling" {:file "doc/logging_and_error_handling.md"}]
+  ["Benchmarking" {:file "doc/benchmarking.md"}]
+  ["Time Variance" {:file "doc/time_variance.md"}]
+  ["Garbage Collector" {:file "doc/gc.md"}]
+  ["Versioning" {:file "doc/versioning.md"}]
+  ["Babashka Pod" {:file "doc/babashka_pod.md"}]
+  ["Command Line Interface" {:file "doc/cli.md"}]]}

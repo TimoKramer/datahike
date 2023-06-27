@@ -1,4 +1,4 @@
-(ns datahike.cli
+(ns ^:no-doc datahike.cli
   (:gen-class)
   (:require [clojure.data.json :as json]
             [clojure.java.io :as io]
@@ -189,8 +189,8 @@
                                     :pprint (edn/read-string s)
                                     :json (ch/parse-string s keyword)
                                     :pretty-json (ch/parse-string s keyword)
-                                    :cbor (cbor/decode s) ;; does this really make sense?
-                                    )
+                                    :cbor (cbor/decode s)) ;; does this really make sense?
+
                                   (case (:input-format options)
                                     :edn (edn/read)
                                     :pprint (edn/read)
