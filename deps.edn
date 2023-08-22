@@ -50,9 +50,8 @@
 
            ;; Build
 
-           :build {:replace-paths []
-                   :replace-deps {datahike.bb {:local/root "bb"}}
-                   :ns-default tools.build}
+           :build {:deps {io.github.clojure/tools.build {:mvn/version "0.9.5"}}
+                   :ns-default build}
 
            :deploy {:extra-deps {slipset/deps-deploy {:mvn/version "0.2.1"}}}
 
