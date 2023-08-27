@@ -31,7 +31,7 @@
 
          lint {:doc "Run clj-kondo linter"
                :require [[pod.borkdude.clj-kondo :as clj-kondo]]
-               :task (clj-kondo/print! (clj-kondo/run! {:lint "."}))}
+               :task (clj-kondo/print! (clj-kondo/run! {:lint "./src"}))}
 
          test {:doc "Run all tests or restrict to 'native-image', 'back-compat' or a kaocha test id (see tests.edn)"
                :depends [jcompile]
