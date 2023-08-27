@@ -240,9 +240,9 @@ jobs:
             DHI_PLATFORM: linux
             DHI_ARCH: AMD64
   release-linux-aarch64:
-    executor:
+    machine:
       enabled: true
-      image: ubuntu-2204:2023.07.2
+      image: ubuntu-2204:current
     resource_class: arm.medium
     working_directory: /home/circleci/replikativ
     environment:
