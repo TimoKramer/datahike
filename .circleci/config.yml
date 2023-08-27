@@ -64,7 +64,7 @@ jobs:
           key: deps-{{ checksum "deps.edn" }}
           paths:
             - /home/circleci/.m2
-  native-image:
+  native-image-linux-amd64:
     machine:
       image: ubuntu-2204:current
       resource_class: medium
@@ -255,10 +255,10 @@ jobs:
           name: install graalvm
           command: |
             cd /home/circleci
-            wget https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-22.2.0/graalvm-ce-java17-linux-amd64-22.2.0.tar.gz
-            tar -xzf graalvm-ce-java17-linux-amd64-22.2.0.tar.gz
-            export PATH=/home/circleci/graalvm-ce-java17-22.2.0/bin:$PATH
-            export JAVA_HOME=/home/circleci/graalvm-ce-java17-22.2.0/
+            wget https://download.oracle.com/graalvm/20/latest/graalvm-jdk-20_linux-aarch64_bin.tar.gz
+            tar -xzf graalvm-jdk-20_linux-aarch64_bin.tar.gz
+            export PATH=/home/circleci/graalvm-jdk-20.0.2+9.1/bin:$PATH
+            export JAVA_HOME=/home/circleci/graalvm-jdk-20.0.2+9.1/
             gu install native-image
       - run:
           name: install clojure
