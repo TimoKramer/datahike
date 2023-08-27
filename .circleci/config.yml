@@ -64,7 +64,7 @@ jobs:
           key: deps-{{ checksum "deps.edn" }}
           paths:
             - /home/circleci/.m2
-  native-image-linux-amd64:
+  native-image:
     machine:
       image: ubuntu-2204:current
       resource_class: medium
