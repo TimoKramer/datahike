@@ -5,6 +5,7 @@ task:
   env:
     DTHK_PLATFORM: macos
     DTHK_ARCH: aarch64
+    GRAALVM_HOME: ${HOME}/graalvm-community-openjdk-21+35.1/Contents/Home/
   script: |
     # install babashka
     curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
@@ -18,13 +19,12 @@ task:
     sudo ./posix-install.sh
 
     # install graalvm
-    curl -L -O https://download.oracle.com/graalvm/21/latest/graalvm-jdk-21_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
-    sudo xattr -r -d com.apple.quarantine graalvm-jdk-21_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
-    tar -xzf graalvm-jdk-21_macos-${DTHK_ARCH}_bin.tar.gz
-    sudo mv graalvm-jdk-21_macos-${DTHK_ARCH} /Library/Java/JavaVirtualMachines
-    /usr/libexec/java_home -V
-    export JAVA_HOME=/Library/Java/JavaVirtualMachines/<graalvm>/Contents/Home
-    export PATH=/Library/Java/JavaVirtualMachines/<graalvm>/Contents/Home/bin:$PATH
+    curl -L -O https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.0/graalvm-community-jdk-21.0.0_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    sudo xattr -r -d com.apple.quarantine graalvm-community-jdk-21.0.0_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    tar -xzvf graalvm-community-jdk-21.0.0_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    export PATH=$GRAALVM_HOME/bin:$PATH
+    ls -lahrt $GRAALVM_HOME
+    export JAVA_HOME=$GRAALVM_HOME
     sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license
     java -version
 
