@@ -1,13 +1,13 @@
-{:org "replikativ"
+{:org "timokramer"
  :lib "datahike"
  :version {:major 0
            :minor 6}
- :git-url "git@github.com:replikativ/datahike.git"
+ :git-url "git@github.com:timokramer/datahike.git"
 
  :pom-template "./bb/resources/template/pom.xml"
- :scm {:connection "scm:git:git@github.com:replikativ/datahike.git"
-       :developerConnection "scm:git:git@github.com:replikativ/datahike.git"
-       :url "https://github.com/replikativ/datahike"}
+ :scm {:connection "scm:git:git@github.com:timokramer/datahike.git"
+       :developerConnection "scm:git:git@github.com:timokramer/datahike.git"
+       :url "https://github.com/timokramer/datahike"}
 
  :build {:clj {;; jvm build
                :src-dirs ["src"]
