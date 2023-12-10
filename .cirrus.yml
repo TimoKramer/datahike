@@ -20,6 +20,7 @@ task:
     # install graalvm
     curl -L -O https://download.oracle.com/graalvm/21/latest/graalvm-jdk-21_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
     sudo xattr -r -d com.apple.quarantine graalvm-jdk-21_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    tar -xzf graalvm-jdk-21_macos-${DTHK_ARCH}.tar.gz
     sudo mv graalvm-jdk-21_macos-${DTHK_ARCH} /Library/Java/JavaVirtualMachines
     /usr/libexec/java_home -V
     export JAVA_HOME=/Library/Java/JavaVirtualMachines/<graalvm>/Contents/Home
