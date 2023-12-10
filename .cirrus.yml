@@ -3,7 +3,6 @@ macos_instance:
 
 task:
   env:
-    GRAALVM_HOME: ${HOME}/graalvm-ce-java11-22.3.1/Contents/Home
     DTHK_PLATFORM: macos
     DTHK_ARCH: aarch64
   script: |
@@ -14,10 +13,17 @@ task:
     export PATH=${HOME}/.local/bin:$PATH
 
     # install clojure
-    bb install clojure
+    curl -L -O https://github.com/clojure/brew-install/releases/latest/download/posix-install.sh
+    chmod +x posix-install.sh
+    sudo ./posix-install.sh
 
     # install graalvm
-    bb install graalvm
+    wget https://download.oracle.com/graalvm/21/latest/graalvm-jdk-21_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    sudo xattr -r -d com.apple.quarantine graalvm-jdk-21_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    sudo mv graalvm-jdk-<version>_macos-<architecture> /Library/Java/JavaVirtualMachines
+    /usr/libexec/java_home -V
+    export JAVA_HOME=/Library/Java/JavaVirtualMachines/<graalvm>/Contents/Home
+    export PATH=/Library/Java/JavaVirtualMachines/<graalvm>/Contents/Home/bin:$PATH
     sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license
     java -version
 
