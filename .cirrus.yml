@@ -8,7 +8,6 @@ task:
     DTHK_ARCH: aarch64
   script: |
     # install babashka
-    cd /home/circleci
     curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
     chmod +x install
     ./install --dir ${HOME}/.local/bin
