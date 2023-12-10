@@ -23,6 +23,7 @@ task:
     sudo xattr -r -d com.apple.quarantine graalvm-community-jdk-21.0.0_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
     tar -xzvf graalvm-community-jdk-21.0.0_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
     export PATH=$GRAALVM_HOME/bin:$PATH
+    pwd
     ls -lahrt $GRAALVM_HOME
     export JAVA_HOME=$GRAALVM_HOME
     sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license
