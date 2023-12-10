@@ -1,0 +1,31 @@
+macos_instance:
+  image: ghcr.io/cirruslabs/macos-monterey-base:latest
+
+task:
+  env:
+    GRAALVM_HOME: ${HOME}/graalvm-ce-java11-22.3.1/Contents/Home
+    DTHK_PLATFORM: macos
+    DTHK_ARCH: aarch64
+  script: |
+    # install babashka
+    cd /home/circleci
+    curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
+    chmod +x install
+    ./install --dir ${HOME}/.local/bin
+    export PATH=${HOME}/.local/bin:$PATH
+
+    # install clojure
+    bb install clojure
+
+    # install graalvm
+    bb install graalvm
+    sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license
+    java -version
+
+    # compile
+    bb ni-cli
+
+    # upload artifact
+    bb release native-cli
+  binaries_artifacts:
+    path: "dist/*"
