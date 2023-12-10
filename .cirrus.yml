@@ -27,10 +27,13 @@ task:
     curl -L -O https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.1/graalvm-community-jdk-21.0.1_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
     sudo xattr -r -d com.apple.quarantine graalvm-community-jdk-21.0.1_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
     tar -xzvf graalvm-community-jdk-21.0.1_${DTHK_PLATFORM}-${DTHK_ARCH}_bin.tar.gz
+    pwd
+    ls -lahrt
     popd >/dev/null
 
-    export PATH=$GRAALVM_HOME/bin:$PATH
+    echo $GRAALVM_HOME
     ls -lahrt $GRAALVM_HOME
+    export PATH=${GRAALVM_HOME}/bin:${PATH}
     export JAVA_HOME=$GRAALVM_HOME
 
     sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license
