@@ -6,7 +6,7 @@ task:
     DTHK_PLATFORM: macos
     DTHK_ARCH: aarch64
     INSTALL_DIR: ${HOME}
-    GRAALVM_HOME: ${HOME}/graalvm-community-openjdk-21+35.1/Contents/Home/
+    GRAALVM_HOME: ${HOME}/graalvm-community-openjdk-21.0.1+12.1/Contents/Home/
   script: |
     set -euo pipefail
 
