@@ -5,7 +5,7 @@
    [clojure.string :as str]
    [flatland.ordered.map :refer [ordered-map]]))
 
-(def graalvm-version "21.0.1")
+(def graalvm-version "21.0.2")
 
 (defn run
   ([cmd-name cmd]
@@ -19,7 +19,14 @@
 
 (defn native-image
   [arch resource-class]
-  (let [cache-key (str arch "-deps-linux-{{ checksum \"deps.edn\" }}")]
+  (let [cache-key (str arch "-deps-linux-{{ checksum \"deps.edn\" }}")
+        graalvm-url (str "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-"
+                         graalvm-version
+                         "/graalvm-community-jdk-"
+                         graalvm-version
+                         "_linux-"
+                         arch
+                         "_bin.tar.gz")]
     (ordered-map
      :machine
      {:image "ubuntu-2204:2023.10.1"
@@ -32,14 +39,15 @@
      [:checkout
       {:restore_cache {:keys [cache-key]}}
       (run "Install GraalVM"
-           "cd /home/circleci
-/bin/wget -O graalvm.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.1/graalvm-community-jdk-21.0.1_linux-x64_bin.tar.gz
+           (format "cd /home/circleci
+/bin/wget -O graalvm.tar.gz %s
 /bin/mkdir graalvm
 /bin/tar -xzf graalvm.tar.gz --directory graalvm --strip-components 1
 sudo update-alternatives --install /usr/bin/java java /home/circleci/graalvm/bin/java 0
 sudo update-alternatives --install /usr/bin/javac javac /home/circleci/graalvm/bin/javac 0
 sudo update-alternatives --set java /home/circleci/graalvm/bin/java
-sudo update-alternatives --set javac /home/circleci/graalvm/bin/javac")
+sudo update-alternatives --set javac /home/circleci/graalvm/bin/javac"
+                   graalvm-url))
       (run "Install Clojure"
            "cd /home/circleci
 /bin/curl -sLO https://download.clojure.org/install/linux-install-1.11.1.1165.sh
