@@ -18,19 +18,21 @@
        base))))
 
 (defn native-image
-  []
-  (ordered-map
-   :machine
-   {:image "ubuntu-2204:2023.10.1"
-    :resource_class "large"}
-   :working_directory "/home/circleci/replikativ"
-   :environment {:GRAALVM_VERSION graalvm-version
-                 :PATH "/bin:/home/circleci/graalvm/bin:/home/circleci/clojure/bin:/home/circleci/bin"
-                 :JAVA_HOME "/home/circleci/graalvm/bin/java"}
-   :steps
-   [:checkout
-    (run "Install GraalVM"
-         "cd /home/circleci
+  [arch resource-class]
+  (let [cache-key (str arch "-deps-linux-{{ checksum \"deps.edn\" }}")]
+    (ordered-map
+     :machine
+     {:image "ubuntu-2204:2023.10.1"
+      :resource_class resource-class}
+     :working_directory "/home/circleci/replikativ"
+     :environment {:GRAALVM_VERSION graalvm-version
+                   :PATH "/bin:/home/circleci/graalvm/bin:/home/circleci/clojure/bin:/home/circleci/bin"
+                   :JAVA_HOME "/home/circleci/graalvm/bin/java"}
+     :steps
+     [:checkout
+      {:restore_cache {:keys [cache-key]}}
+      (run "Install GraalVM"
+           "cd /home/circleci
 /bin/wget -O graalvm.tar.gz https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-21.0.1/graalvm-community-jdk-21.0.1_linux-x64_bin.tar.gz
 /bin/mkdir graalvm
 /bin/tar -xzf graalvm.tar.gz --directory graalvm --strip-components 1
@@ -38,30 +40,33 @@ sudo update-alternatives --install /usr/bin/java java /home/circleci/graalvm/bin
 sudo update-alternatives --install /usr/bin/javac javac /home/circleci/graalvm/bin/javac 0
 sudo update-alternatives --set java /home/circleci/graalvm/bin/java
 sudo update-alternatives --set javac /home/circleci/graalvm/bin/javac")
-    (run "Install Clojure"
-         "cd /home/circleci
+      (run "Install Clojure"
+           "cd /home/circleci
 /bin/curl -sLO https://download.clojure.org/install/linux-install-1.11.1.1165.sh
 /bin/chmod +x linux-install-1.11.1.1165.sh
 ./linux-install-1.11.1.1165.sh --prefix /home/circleci/clojure")
-    (run "Install Babashka"
-         "cd /home/circleci
+      (run "Install Babashka"
+           "cd /home/circleci
 /bin/curl -sLO https://raw.githubusercontent.com/babashka/babashka/master/install
 /bin/chmod +x install
 ./install --dir /home/circleci/bin")
-    (run "Foo"
-         "native-image --version
+      (run "Foo"
+           "native-image --version
 java -version
 env
 /home/circleci/graalvm/bin/java -version")
-    (run "Build native image"
-         "cd /home/circleci/replikativ
+      (run "Build native image"
+           "cd /home/circleci/replikativ
 bb ni-cli")
-    (run "Test native image"
-         "cd /home/circleci/replikativ
+      (run "Test native image"
+           "cd /home/circleci/replikativ
 bb test native-image")
-    {:persist_to_workspace
-     {:root "/home/circleci/"
-      :paths ["replikativ/dthk"]}}]))
+      {:persist_to_workspace
+       {:root "/home/circleci/"
+        :paths ["replikativ/dthk"]}}
+      {:save_cache
+       {:paths ["~/.m2" "~/graalvm"]
+        :key cache-key}}])))
 
 (defn make-config []
   (ordered-map
@@ -76,11 +81,13 @@ bb test native-image")
         :command
         "docker run --privileged --rm tonistiigi/binfmt --install all\ndocker buildx create --name ci-builder --use"}}]}}
    :jobs (ordered-map
-          :linux-amd64 (native-image))
+          :linux-amd64 (native-image "amd64" "large")
+          :linux-aarch64 (native-image "aarch64" "arm.large"))
    :workflows (ordered-map
                :version 2
                :native-images
-               {:jobs ["linux-amd64"]})))
+               {:jobs ["linux-amd64"
+                       "linux-aarch64"]})))
 
 (def skip-config
   {:skip-if-only [#"^doc\/.*"
