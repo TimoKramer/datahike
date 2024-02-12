@@ -17,16 +17,22 @@
        (assoc-in base [:run :no_output_timeout] no-output-timeout)
        base))))
 
+(defn make-graalvm-url [arch]
+  (let [myarch (case arch
+                 "amd64" "x64"
+                 "aarch64" "aarch64")]
+    (str "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-"
+         graalvm-version
+         "/graalvm-community-jdk-"
+         graalvm-version
+         "_linux-"
+         myarch
+         "_bin.tar.gz")))
+
 (defn native-image
   [arch resource-class]
   (let [cache-key (str arch "-deps-linux-{{ checksum \"deps.edn\" }}")
-        graalvm-url (str "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-"
-                         graalvm-version
-                         "/graalvm-community-jdk-"
-                         graalvm-version
-                         "_linux-"
-                         arch
-                         "_bin.tar.gz")]
+        graalvm-url (make-graalvm-url arch)]
     (ordered-map
      :machine
      {:image "ubuntu-2204:2023.10.1"
