@@ -47,7 +47,7 @@
       (run "Install GraalVM"
            (format "cd /home/circleci
 /bin/wget -O graalvm.tar.gz %s
-/bin/mkdir graalvm
+/bin/mkdir graalvm || true
 /bin/tar -xzf graalvm.tar.gz --directory graalvm --strip-components 1
 sudo update-alternatives --install /usr/bin/java java /home/circleci/graalvm/bin/java 0
 sudo update-alternatives --install /usr/bin/javac javac /home/circleci/graalvm/bin/javac 0
