@@ -81,6 +81,8 @@ jobs:
           key: deps-{{ checksum "deps.edn" }}
           paths:
             - /home/circleci/.m2
+      -run:
+         command: ls -lahrt
       - persist_to_workspace:
           root: /home/circleci/
           paths:
