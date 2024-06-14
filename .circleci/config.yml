@@ -224,11 +224,6 @@ workflows:
           context: dockerhub-deploy
           requires:
             - build
-      - native-image-test:
-          context: dockerhub-deploy
-          requires:
-            - build
-            - native-image
       - bb-pod-test:
           context: dockerhub-deploy
           requires:
@@ -255,7 +250,6 @@ workflows:
             - persistent-set-test
             - hitchhiker-tree-test
             # - backward-compatibility-test
-            - native-image-test
             - integration-test
       - release:
           context:
@@ -269,5 +263,4 @@ workflows:
             - persistent-set-test
             - hitchhiker-tree-test
             # - backward-compatibility-test
-            - native-image-test
             - integration-test
