@@ -81,6 +81,12 @@ jobs:
           key: deps-{{ checksum "deps.edn" }}
           paths:
             - /home/circleci/.m2
+      - persist_to_workspace:
+          root: /home/circleci/
+          paths:
+            - .m2
+            - .npm
+            - replikativ
   persistent-set-test:
     executor: tools/clojurecli
     steps:
