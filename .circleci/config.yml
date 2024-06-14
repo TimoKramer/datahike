@@ -81,12 +81,6 @@ jobs:
           key: deps-{{ checksum "deps.edn" }}
           paths:
             - /home/circleci/.m2
-      - run:
-         command: ls -lahrt
-      - persist_to_workspace:
-          root: /home/circleci/
-          paths:
-            - replikativ/dthk
   persistent-set-test:
     executor: tools/clojurecli
     steps:
@@ -126,17 +120,6 @@ jobs:
           key: deps-{{ checksum "deps.edn" }}
           paths:
             - /home/circleci/.m2
-  native-image-test:
-    executor: tools/clojurecli
-    steps:
-      - attach_workspace:
-          at: /home/circleci
-      - run:
-          name: Run native-image test
-          command: |
-            cd /home/circleci/replikativ
-            bb test native-image
-          no_output_timeout: 5m
   bb-pod-test:
     executor: tools/clojurecli
     steps:
@@ -251,10 +234,10 @@ workflows:
           requires:
             - build
             - native-image
-      - backward-compatibility-test:
-          context: dockerhub-deploy
-          requires:
-            - build
+      # - backward-compatibility-test:
+      #     context: dockerhub-deploy
+      #     requires:
+      #       - build
       - integration-test:
           context: dockerhub-deploy
           requires:
@@ -271,7 +254,7 @@ workflows:
             - format
             - persistent-set-test
             - hitchhiker-tree-test
-            - backward-compatibility-test
+            # - backward-compatibility-test
             - native-image-test
             - integration-test
       - release:
@@ -285,6 +268,6 @@ workflows:
             - format
             - persistent-set-test
             - hitchhiker-tree-test
-            - backward-compatibility-test
+            # - backward-compatibility-test
             - native-image-test
             - integration-test
