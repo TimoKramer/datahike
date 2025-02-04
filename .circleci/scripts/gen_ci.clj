@@ -5,7 +5,7 @@
    [clojure.string :as str]
    [flatland.ordered.map :refer [ordered-map]]))
 
-(def graalvm-version "23.0.2")
+(def graalvm-version "22.0.2")
 
 (defn run
   ([cmd-name cmd]
@@ -17,7 +17,7 @@
        (assoc-in base [:run :no_output_timeout] no-output-timeout)
        base))))
 
-(defn make-graalvm-url [arch platform]
+(defn make-graalvm-url [arch]
   (let [myarch (case arch
                  "amd64" "x64"
                  "aarch64" "aarch64")]
@@ -25,19 +25,17 @@
          graalvm-version
          "/graalvm-community-jdk-"
          graalvm-version
-         "_"
-         platform
-         "-"
+         "_linux-"
          myarch
          "_bin.tar.gz")))
 
-(defn build-native-image-linux
-  [arch image resource-class]
+(defn build-native-image
+  [arch resource-class]
   (let [cache-key (str arch "-deps-linux-{{ checksum \"deps.edn\" }}")
-        graalvm-url (make-graalvm-url arch "linux")]
+        graalvm-url (make-graalvm-url arch)]
     (ordered-map
      :machine
-     {:image image
+     {:image "ubuntu-2204:2023.10.1"
       :resource_class resource-class}
      :working_directory "/home/circleci/replikativ"
      :environment {:GRAALVM_VERSION graalvm-version
@@ -81,60 +79,13 @@ bb test native-image")
        {:paths ["~/.m2" "~/graalvm"]
         :key cache-key}}])))
 
-(defn build-native-image-macos
-  [arch]
-  (let [cache-key (str arch "-deps-macos-{{ checksum \"deps.edn\" }}")
-        graalvm-url (make-graalvm-url arch "macos")]
-    (ordered-map
-     :macos
-     {:xcode "13.4.1"}
-     :resource_class "macos.m1.medium.gen1"
-     :environment {:GRAALVM_VERSION graalvm-version
-                   :DTHK_PLATFORM "macos"
-                   :DTHK_ARCH arch
-                   :GRAALVM_HOME "/Library/Java/JavaVirtualMachines/graalvm/Contents/Home"
-                   :JAVA_HOME "/Library/Java/JavaVirtualMachines/graalvm/Contents/Home"}
-     :steps
-     [:checkout
-      {:restore_cache {:keys [cache-key]}}
-      (run "Install Rosetta"
-           "sudo /usr/sbin/softwareupdate --install-rosetta --agree-to-license")
-      (run "Install GraalVM"
-           (format "cd /Users/distiller
-wget -O graalvm.tar.gz %s
-mkdir graalvm || true
-tar -xzf graalvm.tar.gz --directory graalvm --strip-components 1
-sudo mv graalvm /Library/Java/JavaVirtualMachines
-cd /Library/Java/JavaVirtualMachines/graalvm
-ls -lahrtR
-java -version
-native-image"
-                   graalvm-url))
-      (run "Install Clojure"
-           ".circleci/scripts/install-clojure /usr/local")
-      (run "Install Babashka"
-           "bash <(curl -s https://raw.githubusercontent.com/borkdude/babashka/master/install) --dir /Users/distiller
-            sudo mv /Users/distiller/bb /usr/local/bin
-            bb --version")
-      (run "Build native image"
-           "ls -lahrt
-bb ni-cli")
-      (run "Test native image"
-           "bb test native-image")
-      {:persist_to_workspace
-       {:root "/home/circleci/"
-        :paths ["replikativ/dthk"]}}
-      {:save_cache
-       {:paths ["~/.m2" "~/graalvm"]
-        :key cache-key}}])))
-
 (defn release-native-image
-  [platform arch]
+  [arch]
   (let [cache-key (str arch "-deps-linux-{{ checksum \"deps.edn\" }}")]
     (ordered-map
      :executor "tools/clojurecli"
      :working_directory "/home/circleci/replikativ"
-     :environment {:DTHK_PLATFORM platform
+     :environment {:DTHK_PLATFORM "linux"
                    :DTHK_ARCH arch}
      :steps
      [:checkout
@@ -163,17 +114,15 @@ bb release native-image")
         :command
         "docker run --privileged --rm tonistiigi/binfmt --install all\ndocker buildx create --name ci-builder --use"}}]}}
    :jobs (ordered-map
-          :build-linux-amd64 (build-native-image-linux "amd64" "ubuntu-2204:2024.11.1" "large")
-          :build-linux-aarch64 (build-native-image-linux "aarch64""ubuntu-2204:2024.11.1" "arm.large")
-          :build-macos-amd64 (build-native-image-macos "amd64")
-          :release-linux-amd64 (release-native-image "linux" "amd64")
-          :release-linux-aarch64 (release-native-image "linux" "aarch64"))
+          :build-linux-amd64 (build-native-image "amd64" "large")
+          :build-linux-aarch64 (build-native-image "aarch64" "arm.large")
+          :release-linux-amd64 (release-native-image "amd64")
+          :release-linux-aarch64 (release-native-image "aarch64"))
    :workflows (ordered-map
                :version 2
                :native-images
                {:jobs ["build-linux-amd64"
                        "build-linux-aarch64"
-                       "build-macos-amd64"
                        {"release-linux-amd64"
                         {:context ["dockerhub-deploy"
                                    "github-token"]
@@ -224,6 +173,4 @@ bb release native-image")
   (anything-relevant? changed-files (:skip-if-only skip-config))
   (-> (make-config) 
       (yaml/generate-string :dumper-options {:flow-style :block})
-      println)
-
-  (make-graalvm-url "amd64" "macos"))
+      println))

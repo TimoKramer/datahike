@@ -1,5 +1,5 @@
 macos_instance:
-  image: ghcr.io/cirruslabs/macos-runner:sonoma
+  image: ghcr.io/cirruslabs/macos-monterey-base:latest
 
 build-task:
   env:
