@@ -2,6 +2,7 @@ macos_instance:
   image: ghcr.io/cirruslabs/macos-monterey-base:latest
 
 build-task:
+  only_if: $CIRRUS_BRANCH == 'main'
   env:
     DTHK_PLATFORM: macos
     DTHK_ARCH: aarch64

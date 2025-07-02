@@ -65,9 +65,9 @@ jobs:
       - name: Release native-image
         run: bb release native-image
 
-      - name: Cache dependencies
+      - name: Save cache
         uses: actions/cache/save@v4
-        id: ${{ steps.restore-cache.outputs.cache-primary-key }}
+        id: save-cache
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
