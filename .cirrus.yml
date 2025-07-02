@@ -49,8 +49,10 @@ build-task:
     bb test bb-pod
 
     # upload artifact
-    if [[ $CIRRUS_RELEASE == "" ]]; then
-      bb release native-cli
-    fi
+    env
+    # if [[ $CIRRUS_RELEASE == "" ]]; then
+    #   bb release native-image
+    # fi
+    bb release native-image
   binaries_artifacts:
     path: "dist/*"
