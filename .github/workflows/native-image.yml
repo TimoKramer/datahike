@@ -34,25 +34,18 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      - name: Cache deps
-        uses: actions/cache@v4
-        id: cache-deps
+      - name: Restore cache
+        uses: actions/cache/restore@v4
+        id: restore-cache
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
-          restore-keys: ${{ runner.os }}-maven-
-
-      - name: Eat this!!!
-        run: |
-          arch
-          uname -m
 
       - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
           java-version: '24'
           distribution: 'graalvm'
-          components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install clojure tools
@@ -70,4 +63,11 @@ jobs:
           bb test bb-pod
 
       - name: Release native-image
-        run: bb release native-cli
+        run: bb release native-image
+
+      - name: Cache dependencies
+        uses: actions/cache/save@v4
+        id: ${{ steps.restore-cache.outputs.cache-primary-key }}
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
