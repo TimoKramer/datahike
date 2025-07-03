@@ -64,7 +64,6 @@
   (let [{:keys [target-dir binary-name zip-pattern]} (-> config :release project)
         lib (:lib config)
         version (version/string config)
-        _ (println "VERSION:::::::::::::::::::::::: " version)
         binary-path (str target-dir "/" binary-name)]
     (if-not (fs/exists? binary-path)
       (do (println (str "ERROR: " binary-path " executable not found, please compile first."))
