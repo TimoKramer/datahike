@@ -39,7 +39,7 @@ jobs:
         id: restore-cache
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}
 
       - name: Setup GraalVM
         uses: graalvm/setup-graalvm@v1
@@ -70,4 +70,4 @@ jobs:
         id: save-cache
         with:
           path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          key: ${{ runner.os }}-maven-${{ hashFiles('deps.edn') }}

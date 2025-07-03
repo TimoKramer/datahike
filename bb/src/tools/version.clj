@@ -3,12 +3,14 @@
   (:refer-clojure :exclude [inc])
   (:require [clojure.edn :as edn]
             [clojure.string :as str]
-            [clojure.tools.build.api :as b]))
+            [clojure.tools.build.api :as b]
+            [babashka.fs :as fs]))
 
 (defn read-edn-file [filename]
   (edn/read-string (slurp filename)))
 
 (defn commit-nr []
+  (println (map str (fs/list-dir ".")))
   (b/git-count-revs {:dir "."}))
 
 (defn current-commit []
